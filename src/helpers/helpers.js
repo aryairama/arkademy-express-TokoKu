@@ -23,4 +23,4 @@ const promiseResolveReject = (resolve, reject, error, result) => {
     reject(error);
   }
 };
-export default { response,responseError, promiseResolveReject };
+export default { response, responseError, promiseResolveReject };
