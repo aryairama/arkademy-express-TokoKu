@@ -20,5 +20,7 @@ module.exports = {
     ],
     'max-len': ['error', { code: 150 }],
     'no-console': 0,
+    'consistent-return': 0,
+    'no-param-reassign': 0,
   },
 };
