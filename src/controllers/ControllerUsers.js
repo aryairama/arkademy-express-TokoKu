@@ -28,22 +28,39 @@ const readUser = async (req, res, next) => {
   }
   try {
     let dataUsers;
+    let pagination;
     const lengthRecord = Object.keys(await userModel.readUser(search, order, fieldOrder)).length;
     if (lengthRecord > 0) {
       const limit = req.query.limit || 5;
       const pages = Math.ceil(lengthRecord / limit);
       let page = req.query.page || 1;
+      let nextPage = parseInt(page, 10) + 1;
+      let prevPage = parseInt(page, 10) - 1;
+      if (nextPage > pages) {
+        nextPage = pages;
+      }
+      if (prevPage < 1) {
+        prevPage = 1;
+      }
       if (page > pages) {
         page = pages;
       } else if (page < 1) {
         page = 1;
       }
       const start = (page - 1) * limit;
+      pagination = {
+        pages,
+        limit: parseInt(limit, 10),
+        curentPage: parseInt(page, 10),
+        nextPage,
+        prevPage,
+      };
       dataUsers = await userModel.readUser(search, order, fieldOrder, start, limit);
+      helpers.responsePagination(res, 'success', 200, 'data users', dataUsers, pagination);
     } else {
       dataUsers = await userModel.readUser(search, order, fieldOrder);
+      helpers.response(res, 'success', 200, 'data users', dataUsers);
     }
-    helpers.response(res, 'success', 200, 'data users', dataUsers);
   } catch (error) {
     next(error);
   }

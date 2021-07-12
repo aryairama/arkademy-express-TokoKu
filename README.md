@@ -25,7 +25,7 @@ Body | value | Rules
 name | T-shirt Dark Face | String
 brand | zalora | String
 price | 85000 | Number
-colors | white | Enum
+colors | white | Enum blue/red/black/white
 size | 42 | Number
 quantity | 4 | Number
 product_status | new | Enum new/former

@@ -117,23 +117,40 @@ const readOrder = async (req, res, next) => {
     fieldOrder = 'order_id';
   }
   try {
-    let dataCategories;
+    let dataOrders;
+    let pagination;
     const lengthRecord = Object.keys(await ordersModel.readOrder(search, order, fieldOrder)).length;
     if (lengthRecord > 0) {
       const limit = req.query.limit || 5;
       const pages = Math.ceil(lengthRecord / limit);
       let page = req.query.page || 1;
+      let nextPage = parseInt(page, 10) + 1;
+      let prevPage = parseInt(page, 10) - 1;
+      if (nextPage > pages) {
+        nextPage = pages;
+      }
+      if (prevPage < 1) {
+        prevPage = 1;
+      }
       if (page > pages) {
         page = pages;
       } else if (page < 1) {
         page = 1;
       }
       const start = (page - 1) * limit;
-      dataCategories = await ordersModel.readOrder(search, order, fieldOrder, start, limit);
+      pagination = {
+        pages,
+        limit: parseInt(limit, 10),
+        curentPage: parseInt(page, 10),
+        nextPage,
+        prevPage,
+      };
+      dataOrders = await ordersModel.readOrder(search, order, fieldOrder, start, limit);
+      helpers.responsePagination(res, 'success', 200, 'data categories', dataOrders, pagination);
     } else {
-      dataCategories = await ordersModel.readOrder(search, order, fieldOrder);
+      dataOrders = await ordersModel.readOrder(search, order, fieldOrder);
+      helpers.response(res, 'success', 200, 'data categories', dataOrders);
     }
-    helpers.response(res, 'success', 200, 'data categories', dataCategories);
   } catch (error) {
     next(error);
   }

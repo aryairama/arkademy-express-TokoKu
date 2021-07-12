@@ -94,6 +94,14 @@ const rulesCreateAndUpdate = () => [
     .bail()
     .isLength({ min: 1, max: 10 })
     .withMessage('category id must be more than 0 and less than 10 digits'),
+  body('colors')
+    .notEmpty()
+    .withMessage('colors product is required')
+    .bail()
+    .isIn(['blue', 'red', 'black', 'white'])
+    .withMessage(
+      'the value of the condition of the product must be blue,red,black,white',
+    ),
 ];
 
 const rulesUpdateAndDelete = () => [
