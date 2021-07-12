@@ -1,9 +1,16 @@
 import productModel from '../models/products.js';
 import helpers from '../helpers/helpers.js';
 
-const readProduct = async (req, res) => {
+const readProduct = async (req, res, next) => {
   const search = req.query.search || '';
-  const order = req.query.order ? (req.query.order.toUpperCase() === 'ASC' ? 'ASC' : '' || req.query.order.toUpperCase() === 'DESC' ? 'DESC' : '') : 'DESC';
+  let order = req.query.order || '';
+  if (order.toUpperCase() === 'ASC') {
+    order = 'ASC';
+  } else if (order.toUpperCase() === 'DESC') {
+    order = 'DESC';
+  } else {
+    order = 'DESC';
+  }
   let { fieldOrder } = req.query;
   if (fieldOrder) {
     if (fieldOrder.toLowerCase() === 'name') {
@@ -37,37 +44,26 @@ const readProduct = async (req, res) => {
     }
     helpers.response(res, 'success', 200, 'data products', dataProducts);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const insertProduct = async (req, res) => {
-  const {
-    name,
-    brand,
-    category_id,
-    price,
-    colors,
-    size,
-    quantity,
-    product_status,
-    description,
-  } = req.body;
+const insertProduct = async (req, res, next) => {
   const data = {
-    name,
-    brand,
-    category_id,
-    price,
-    colors,
-    size,
-    quantity,
-    product_status,
-    description,
+    name: req.body.name,
+    brand: req.body.brand,
+    category_id: req.body.category_id,
+    price: req.body.price,
+    colors: req.body.colors,
+    size: req.body.size,
+    quantity: req.body.quantity,
+    product_status: req.body.product_status,
+    description: req.body.description,
     created_at: new Date(),
     updated_at: new Date(),
   };
   try {
-    const checkCategoryId = Object.keys(await productModel.checkExistCategory(category_id)).length;
+    const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
     if (checkCategoryId > 0) {
       const addDataProduct = await productModel.insertProduct(data);
       helpers.response(res, 'success', 200, 'successfully added product data', addDataProduct);
@@ -75,36 +71,25 @@ const insertProduct = async (req, res) => {
       helpers.response(res, 'failed', 404, "The category id doesn't exist", []);
     }
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const updateProduct = async (req, res) => {
+const updateProduct = async (req, res, next) => {
   try {
-    const {
-      name,
-      brand,
-      category_id,
-      price,
-      colors,
-      size,
-      quantity,
-      product_status,
-      description,
-    } = req.body;
     const data = {
-      name,
-      brand,
-      category_id,
-      price,
-      colors,
-      size,
-      quantity,
-      product_status,
-      description,
+      name: req.body.name,
+      brand: req.body.brand,
+      category_id: req.body.category_id,
+      price: req.body.price,
+      colors: req.body.colors,
+      size: req.body.size,
+      quantity: req.body.quantity,
+      product_status: req.body.product_status,
+      description: req.body.description,
       updated_at: new Date(),
     };
-    const checkCategoryId = Object.keys(await productModel.checkExistCategory(category_id)).length;
+    const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
     if (checkCategoryId > 0) {
       const changeDataProduct = await productModel.updateProduct(data, req.params.id);
       if (changeDataProduct.affectedRows) {
@@ -116,24 +101,20 @@ const updateProduct = async (req, res) => {
       helpers.response(res, 'failed', 404, "The category id doesn't exist", []);
     }
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const deleteProduct = async (req, res) => {
-  if (!req.params.id || !parseInt(req.params.id)) {
-    helpers.response(res, 'error', 422, 'id must be a number and cannot empty', []);
-  } else {
-    try {
-      const removeDataProduct = await productModel.deleteProduct(req.params.id);
-      if (removeDataProduct.affectedRows) {
-        helpers.response(res, 'success', 200, 'successfully deleted product data', []);
-      } else {
-        helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
-      }
-    } catch (error) {
-      console.log(error);
+const deleteProduct = async (req, res, next) => {
+  try {
+    const removeDataProduct = await productModel.deleteProduct(req.params.id);
+    if (removeDataProduct.affectedRows) {
+      helpers.response(res, 'success', 200, 'successfully deleted product data', []);
+    } else {
+      helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
     }
+  } catch (error) {
+    next(error);
   }
 };
 

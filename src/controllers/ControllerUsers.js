@@ -4,9 +4,16 @@ import fs from 'fs/promises';
 import helpers from '../helpers/helpers.js';
 import userModel from '../models/users.js';
 
-const readUser = async (req, res) => {
+const readUser = async (req, res, next) => {
   const search = req.query.search || '';
-  const order = req.query.order ? (req.query.order.toUpperCase() === 'ASC' ? 'ASC' : '' || req.query.order.toUpperCase() === 'DESC' ? 'DESC' : '') : 'DESC';
+  let order = req.query.order || '';
+  if (order.toUpperCase() === 'ASC') {
+    order = 'ASC';
+  } else if (order.toUpperCase() === 'DESC') {
+    order = 'DESC';
+  } else {
+    order = 'DESC';
+  }
   let { fieldOrder } = req.query;
   if (fieldOrder) {
     if (fieldOrder.toLowerCase() === 'name') {
@@ -38,11 +45,11 @@ const readUser = async (req, res) => {
     }
     helpers.response(res, 'success', 200, 'data users', dataUsers);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const register = async (req, res) => {
+const register = async (req, res, next) => {
   try {
     const salt = await bcrypt.genSalt(10);
     const data = {
@@ -57,11 +64,11 @@ const register = async (req, res) => {
     const addDataUser = await userModel.insertUser(data);
     helpers.response(res, 'success', 200, 'successfully added category data', addDataUser);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const updateUser = async (req, res) => {
+const updateUser = async (req, res, next) => {
   try {
     const salt = await bcrypt.genSalt(10);
     let data = {
@@ -102,11 +109,11 @@ const updateUser = async (req, res) => {
       return helpers.response(res, 'failed', 404, 'the data you want to update does not exist', []);
     }
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const deleteUser = async (req, res) => {
+const deleteUser = async (req, res, next) => {
   try {
     const getDataUser = await userModel.checkExistUser(req.params.id);
     if (Object.keys(getDataUser).length > 0) {
@@ -121,7 +128,7 @@ const deleteUser = async (req, res) => {
       helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
     }
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 

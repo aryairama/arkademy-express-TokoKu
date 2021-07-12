@@ -1,9 +1,16 @@
 import categoryModel from '../models/categories.js';
 import helpers from '../helpers/helpers.js';
 
-const readCategory = async (req, res) => {
+const readCategory = async (req, res, next) => {
   const search = req.query.search || '';
-  const order = req.query.order ? (req.query.order.toUpperCase() === 'ASC' ? 'ASC' : '' || req.query.order.toUpperCase() === 'DESC' ? 'DESC' : '') : 'DESC';
+  let order = req.query.order || '';
+  if (order.toUpperCase() === 'ASC') {
+    order = 'ASC';
+  } else if (order.toUpperCase() === 'DESC') {
+    order = 'DESC';
+  } else {
+    order = 'DESC';
+  }
   let { fieldOrder } = req.query;
   if (fieldOrder) {
     if (fieldOrder.toLowerCase() === 'name') {
@@ -33,11 +40,11 @@ const readCategory = async (req, res) => {
     }
     helpers.response(res, 'success', 200, 'data categories', dataCategories);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const insertCategory = async (req, res) => {
+const insertCategory = async (req, res, next) => {
   const data = {
     name: req.body.name,
     created_at: new Date(),
@@ -47,11 +54,11 @@ const insertCategory = async (req, res) => {
     const addDataCategory = await categoryModel.insertCategory(data);
     helpers.response(res, 'success', 200, 'successfully added category data', addDataCategory);
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const updateCategory = async (req, res) => {
+const updateCategory = async (req, res, next) => {
   try {
     const data = {
       name: req.body.name,
@@ -64,11 +71,11 @@ const updateCategory = async (req, res) => {
       helpers.response(res, 'failed', 404, 'the data you want to change does not exist', []);
     }
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 
-const deleteCategory = async (req, res) => {
+const deleteCategory = async (req, res, next) => {
   try {
     const removeDataCategory = await categoryModel.deleteCategory(req.params.id);
     if (removeDataCategory.affectedRows) {
@@ -77,7 +84,7 @@ const deleteCategory = async (req, res) => {
       helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
     }
   } catch (error) {
-    console.log(error);
+    next(error);
   }
 };
 export default {
