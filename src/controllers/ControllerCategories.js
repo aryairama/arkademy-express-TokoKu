@@ -44,6 +44,7 @@ const readCategory = async (req, res, next) => {
       }
       const start = (page - 1) * limit;
       pagination = {
+        countData: lengthRecord,
         pages,
         limit: parseInt(limit, 10),
         curentPage: parseInt(page, 10),
