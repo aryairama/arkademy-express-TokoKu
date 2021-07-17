@@ -168,9 +168,19 @@ const deleteProduct = async (req, res, next) => {
   }
 };
 
+const viewProductDetail = async (req, res, next) => {
+  try {
+    const detailProduct = await productModel.viewProductDetail(req.params.id);
+    helpers.response(res, 'success', 200, 'detail product', detailProduct);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   readProduct,
   insertProduct,
   updateProduct,
   deleteProduct,
+  viewProductDetail,
 };

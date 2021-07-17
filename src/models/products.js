@@ -65,6 +65,17 @@ const checkRealtionOrderDetailsProduct = (id) => new Promise((resolve, reject) =
     },
   );
 });
+
+const viewProductDetail = (id) => new Promise((resolve, reject) => {
+  connection.query(
+    `SELECT categories.name AS category_name,products.* FROM products INNER JOIN categories ON products.category_id = categories.category_id
+    WHERE products.product_id = ?`,
+    id,
+    (error, result) => {
+      helpers.promiseResolveReject(resolve, reject, error, result);
+    },
+  );
+});
 export default {
   readProduct,
   insertProduct,
@@ -73,4 +84,5 @@ export default {
   checkExistCategory,
   checkExistProduct,
   checkRealtionOrderDetailsProduct,
+  viewProductDetail,
 };
