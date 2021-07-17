@@ -177,10 +177,20 @@ const viewProductDetail = async (req, res, next) => {
   }
 };
 
+const readProductCategory = async (req, res, next) => {
+  try {
+    const productByCategory = await productModel.readProductCategory(req.params.id);
+    helpers.response(res, 'success', 200, 'data products', productByCategory);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   readProduct,
   insertProduct,
   updateProduct,
   deleteProduct,
   viewProductDetail,
+  readProductCategory,
 };

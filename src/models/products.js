@@ -76,6 +76,12 @@ const viewProductDetail = (id) => new Promise((resolve, reject) => {
     },
   );
 });
+
+const readProductCategory = (id) => new Promise((resolve, reject) => {
+  connection.query('SELECT * FROM products where category_id = ?', id, (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
 export default {
   readProduct,
   insertProduct,
@@ -85,4 +91,5 @@ export default {
   checkExistProduct,
   checkRealtionOrderDetailsProduct,
   viewProductDetail,
+  readProductCategory,
 };

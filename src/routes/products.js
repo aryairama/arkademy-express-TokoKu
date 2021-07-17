@@ -7,6 +7,7 @@ router
   .get('/', ValidationProducts('read'), ControllerProduct.readProduct)
   .post('/', ValidationProducts('create'), ControllerProduct.insertProduct)
   .get('/:id', ValidationProducts('delete'), ControllerProduct.viewProductDetail)
+  .get('/category/:id', ValidationProducts('delete'), ControllerProduct.readProductCategory)
   .put('/:id', ValidationProducts('update'), ControllerProduct.updateProduct)
   .delete('/:id', ValidationProducts('delete'), ControllerProduct.deleteProduct);
 
