@@ -1,3 +1,6 @@
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs/promises';
 import productModel from '../models/products.js';
 import helpers from '../helpers/helpers.js';
 
@@ -67,22 +70,26 @@ const readProduct = async (req, res, next) => {
 };
 
 const insertProduct = async (req, res, next) => {
-  const data = {
-    name: req.body.name,
-    brand: req.body.brand,
-    category_id: req.body.category_id,
-    price: req.body.price,
-    colors: req.body.colors,
-    size: req.body.size,
-    quantity: req.body.quantity,
-    product_status: req.body.product_status,
-    description: req.body.description,
-    created_at: new Date(),
-    updated_at: new Date(),
-  };
   try {
+    let data = {
+      name: req.body.name,
+      brand: req.body.brand,
+      category_id: req.body.category_id,
+      price: req.body.price,
+      colors: req.body.colors,
+      size: req.body.size,
+      quantity: req.body.quantity,
+      product_status: req.body.product_status,
+      description: req.body.description,
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
     const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
     if (checkCategoryId > 0) {
+      const fileName = uuidv4() + path.extname(req.files.imgProduct.name);
+      const savePath = path.join(path.dirname(''), '/public/img/product', fileName);
+      data = { ...data, img_product: `public/img/product/${fileName}` };
+      await req.files.imgProduct.mv(savePath);
       const addDataProduct = await productModel.insertProduct(data);
       helpers.response(res, 'success', 200, 'successfully added product data', addDataProduct);
     } else {
@@ -95,7 +102,7 @@ const insertProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    const data = {
+    let data = {
       name: req.body.name,
       brand: req.body.brand,
       category_id: req.body.category_id,
@@ -108,10 +115,22 @@ const updateProduct = async (req, res, next) => {
       updated_at: new Date(),
     };
     const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
+    const checkExistProduct = await productModel.checkExistProduct(req.params.id);
     if (checkCategoryId > 0) {
-      const changeDataProduct = await productModel.updateProduct(data, req.params.id);
-      if (changeDataProduct.affectedRows) {
-        helpers.response(res, 'success', 200, 'successfully updated product data', []);
+      if (checkExistProduct.length > 0) {
+        if (req.files) {
+          if (req.files.imgProduct) {
+            fs.unlink(path.join(path.dirname(''), `/${checkExistProduct[0].img_product}`));
+            const fileName = uuidv4() + path.extname(req.files.imgProduct.name);
+            const savePath = path.join(path.dirname(''), '/public/img/product', fileName);
+            data = { ...data, img_product: `public/img/product/${fileName}` };
+            await req.files.imgProduct.mv(savePath);
+          }
+        }
+        const changeDataProduct = await productModel.updateProduct(data, req.params.id);
+        if (changeDataProduct.affectedRows) {
+          helpers.response(res, 'success', 200, 'successfully updated product data', []);
+        }
       } else {
         helpers.response(res, 'failed', 404, 'the data you want to change does not exist', []);
       }
@@ -125,9 +144,22 @@ const updateProduct = async (req, res, next) => {
 
 const deleteProduct = async (req, res, next) => {
   try {
-    const removeDataProduct = await productModel.deleteProduct(req.params.id);
-    if (removeDataProduct.affectedRows) {
-      helpers.response(res, 'success', 200, 'successfully deleted product data', []);
+    const checkRealtion = await productModel.checkRealtionOrderDetailsProduct(req.params.id);
+    const checkExistProduct = await productModel.checkExistProduct(req.params.id);
+    if (checkExistProduct.length > 0) {
+      if (checkRealtion.length === 0) {
+        const removeDataProduct = await productModel.deleteProduct(req.params.id);
+        if (removeDataProduct.affectedRows) {
+          fs.unlink(path.join(path.dirname(''), `/${checkExistProduct[0].img_product}`));
+          helpers.response(res, 'success', 200, 'successfully deleted product data', []);
+        } else {
+          helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
+        }
+      } else if (checkRealtion.length > 0) {
+        helpers.response(
+          res, 'data relation', 409, 'product data cannot be deleted because it is related to other data', [],
+        );
+      }
     } else {
       helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
     }

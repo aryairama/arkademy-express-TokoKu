@@ -56,14 +56,11 @@ const rulesCreateAndUpdate = () => [
     .isInt({ min: 1 })
     .withMessage('price must be more than 0'),
   body('size')
-    .toInt()
-    .isNumeric()
-    .withMessage('size must be number')
+    .notEmpty()
+    .withMessage('size product is required')
     .bail()
-    .isLength({ min: 1, max: 2 })
-    .withMessage('size must be more than 0 and less than 2 digits')
-    .isInt({ min: 1 })
-    .withMessage('price must be more than 0'),
+    .isIn(['XL', 'L', 'M', 'S', 'XS'])
+    .withMessage('the value of the product size must be XL, L, M, S, XS'),
   body('quantity')
     .toInt()
     .isNumeric()
@@ -76,9 +73,7 @@ const rulesCreateAndUpdate = () => [
     .withMessage('condition product is required')
     .bail()
     .isIn(['new', 'former'])
-    .withMessage(
-      'the value of the condition of the product must be "new" or "former"',
-    ),
+    .withMessage('the value of the condition of the product must be "new" or "former"'),
   body('description')
     .notEmpty()
     .withMessage('description is required')
@@ -99,11 +94,41 @@ const rulesCreateAndUpdate = () => [
     .withMessage('colors product is required')
     .bail()
     .isIn(['blue', 'red', 'black', 'white'])
-    .withMessage(
-      'the value of the condition of the product must be blue,red,black,white',
-    ),
+    .withMessage('the value of the condition of the product must be blue,red,black,white'),
 ];
 
+const rulesFileUploud = (req, res, next) => {
+  if (req.files) {
+    if (req.files.imgProduct) {
+      req.body.imgProduct = { ...req.files.imgProduct };
+    }
+  }
+  next();
+};
+
+const rulesCreateImgProduct = () => [
+  body('imgProduct')
+    .notEmpty()
+    .withMessage('imgProduct is required')
+    .bail()
+    .custom((value) => {
+      if (value.mimetype !== 'image/png' && value.mimetype !== 'image/jpeg') {
+        throw new Error('imgProduct mmust be jpg or png');
+      }
+      return true;
+    }),
+];
+
+const rulesUpdateImgProduct = () => [
+  body('imgProduct')
+    .optional({ nullable: true })
+    .custom((value) => {
+      if (value.mimetype !== 'image/png' && value.mimetype !== 'image/jpeg') {
+        throw new Error('imgProduct mmust be jpg or png');
+      }
+      return true;
+    }),
+];
 const rulesUpdateAndDelete = () => [
   param('id')
     .isNumeric()
@@ -116,11 +141,14 @@ const rulesUpdateAndDelete = () => [
 const validate = (method) => {
   if (method === 'read') {
     return [rulesRead(), validateResult];
-  } if (method === 'create') {
-    return [rulesCreateAndUpdate(), validateResult];
-  } if (method === 'update') {
-    return [rulesUpdateAndDelete(), rulesCreateAndUpdate(), validateResult];
-  } if (method === 'delete') {
+  }
+  if (method === 'create') {
+    return [rulesFileUploud, rulesCreateImgProduct(), rulesCreateAndUpdate(), validateResult];
+  }
+  if (method === 'update') {
+    return [rulesFileUploud, rulesUpdateAndDelete(), rulesUpdateImgProduct(), rulesCreateAndUpdate(), validateResult];
+  }
+  if (method === 'delete') {
     return [rulesUpdateAndDelete(), validateResult];
   }
   return false;

@@ -50,10 +50,27 @@ const checkExistCategory = (id) => new Promise((resolve, reject) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
   });
 });
+
+const checkExistProduct = (id) => new Promise((resolve, reject) => {
+  connection.query('SELECT * FROM products where product_id = ?', id, (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
+
+const checkRealtionOrderDetailsProduct = (id) => new Promise((resolve, reject) => {
+  connection.query(
+    `SELECT products.* , order_details.* FROM products INNER JOIN order_details ON products.product_id = order_details.product_id 
+    WHERE products.product_id = ?`, id, (error, result) => {
+      helpers.promiseResolveReject(resolve, reject, error, result);
+    },
+  );
+});
 export default {
   readProduct,
   insertProduct,
   deleteProduct,
   updateProduct,
   checkExistCategory,
+  checkExistProduct,
+  checkRealtionOrderDetailsProduct,
 };
