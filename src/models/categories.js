@@ -41,6 +41,27 @@ const deleteCategory = (id) => new Promise((resolve, reject) => {
   });
 });
 
+const checkExistCategory = (id) => new Promise((resolve, reject) => {
+  connection.query('SELECT * FROM categories where category_id = ?', id, (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
+
+const checkRealtionCategoryProduct = (id) => new Promise((resolve, reject) => {
+  connection.query(
+    `SELECT products.* , categories.* FROM categories INNER JOIN products ON categories.category_id = products.category_id 
+    WHERE categories.category_id = ?`,
+    id,
+    (error, result) => {
+      helpers.promiseResolveReject(resolve, reject, error, result);
+    },
+  );
+});
 export default {
-  readProduct, insertCategory, updateCategory, deleteCategory,
+  readProduct,
+  insertCategory,
+  updateCategory,
+  deleteCategory,
+  checkExistCategory,
+  checkRealtionCategoryProduct,
 };

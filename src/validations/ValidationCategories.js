@@ -57,13 +57,47 @@ const rulesUpdateAndDelete = () => [
     .isInt({ min: 1 })
     .withMessage('id must be more than 0'),
 ];
+
+const rulesFileUploud = (req, res, next) => {
+  if (req.files) {
+    if (req.files.img_category) {
+      req.body.img_category = { ...req.files.img_category };
+    }
+  }
+  next();
+};
+
+const rulesCreateImgCategory = () => [
+  body('img_category')
+    .notEmpty()
+    .withMessage('img category is required')
+    .bail()
+    .custom((value) => {
+      if (value.mimetype !== 'image/png' && value.mimetype !== 'image/jpeg') {
+        throw new Error('imgProduct must be jpg or png');
+      }
+      return true;
+    }),
+];
+
+const rulesUpdateImgCategory = () => [
+  body('img_category')
+    .optional({ nullable: true })
+    .custom((value) => {
+      if (value.mimetype !== 'image/png' && value.mimetype !== 'image/jpeg') {
+        throw new Error('img category must be jpg or png');
+      }
+      return true;
+    }),
+];
+
 const validate = (method) => {
   if (method === 'read') {
     return [rulesRead(), validateResult];
   } if (method === 'create') {
-    return [rulesCreateAndUpdate(), validateResult];
+    return [rulesFileUploud, rulesCreateImgCategory(), rulesCreateAndUpdate(), validateResult];
   } if (method === 'update') {
-    return [rulesUpdateAndDelete(), rulesCreateAndUpdate(), validateResult];
+    return [rulesFileUploud, rulesUpdateImgCategory(), rulesUpdateAndDelete(), rulesCreateAndUpdate(), validateResult];
   } if (method === 'delete') {
     return [rulesUpdateAndDelete(), validateResult];
   }

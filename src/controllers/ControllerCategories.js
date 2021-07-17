@@ -1,3 +1,6 @@
+import path from 'path';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs/promises';
 import categoryModel from '../models/categories.js';
 import helpers from '../helpers/helpers.js';
 
@@ -62,14 +65,22 @@ const readCategory = async (req, res, next) => {
 };
 
 const insertCategory = async (req, res, next) => {
-  const data = {
+  let data = {
     name: req.body.name,
     created_at: new Date(),
     updated_at: new Date(),
   };
   try {
+    const fileName = uuidv4() + path.extname(req.files.img_category.name);
+    const savePath = path.join(path.dirname(''), '/public/img/categories', fileName);
+    data = { ...data, img_category: `public/img/categories/${fileName}` };
     const addDataCategory = await categoryModel.insertCategory(data);
-    helpers.response(res, 'success', 200, 'successfully added category data', addDataCategory);
+    if (addDataCategory.affectedRows) {
+      await req.files.img_category.mv(savePath);
+      helpers.response(res, 'success', 200, 'successfully added category data', addDataCategory);
+    } else {
+      helpers.response(res, 'failed', 500, 'internal server error', []);
+    }
   } catch (error) {
     next(error);
   }
@@ -77,13 +88,25 @@ const insertCategory = async (req, res, next) => {
 
 const updateCategory = async (req, res, next) => {
   try {
-    const data = {
+    let data = {
       name: req.body.name,
       updated_at: new Date(),
     };
-    const changeDataCategory = await categoryModel.updateCategory(data, req.params.id);
-    if (changeDataCategory.affectedRows) {
-      helpers.response(res, 'success', 200, 'successfully updated category data', []);
+    const checkExistCategory = await categoryModel.checkExistCategory(req.params.id);
+    if (checkExistCategory.length > 0) {
+      if (req.files) {
+        if (req.files.img_category) {
+          fs.unlink(path.join(path.dirname(''), `/${checkExistCategory[0].img_category}`));
+          const fileName = uuidv4() + path.extname(req.files.img_category.name);
+          const savePath = path.join(path.dirname(''), '/public/img/categories', fileName);
+          await req.files.img_category.mv(savePath);
+          data = { ...data, img_category: `public/img/categories/${fileName}` };
+        }
+      }
+      const changeDataCategory = await categoryModel.updateCategory(data, req.params.id);
+      if (changeDataCategory.affectedRows) {
+        helpers.response(res, 'success', 200, 'successfully updated category data', []);
+      }
     } else {
       helpers.response(res, 'failed', 404, 'the data you want to change does not exist', []);
     }
@@ -94,9 +117,20 @@ const updateCategory = async (req, res, next) => {
 
 const deleteCategory = async (req, res, next) => {
   try {
-    const removeDataCategory = await categoryModel.deleteCategory(req.params.id);
-    if (removeDataCategory.affectedRows) {
-      helpers.response(res, 'success', 200, 'successfully deleted category data', []);
+    const checkRealtion = await categoryModel.checkRealtionCategoryProduct(req.params.id);
+    const checkExistCategory = await categoryModel.checkExistCategory(req.params.id);
+    if (checkExistCategory.length > 0) {
+      if (checkRealtion.length === 0) {
+        const removeDataCategory = await categoryModel.deleteCategory(req.params.id);
+        if (removeDataCategory.affectedRows) {
+          fs.unlink(path.join(path.dirname(''), `/${checkExistCategory[0].img_category}`));
+          helpers.response(res, 'success', 200, 'successfully deleted category data', []);
+        }
+      } else if (checkRealtion.length > 0) {
+        helpers.response(
+          res, 'data relation', 409, 'product data cannot be deleted because it is related to other data', [],
+        );
+      }
     } else {
       helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
     }
