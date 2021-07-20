@@ -57,6 +57,13 @@ const checkRealtionCategoryProduct = (id) => new Promise((resolve, reject) => {
     },
   );
 });
+
+const viewCategoryDetail = (id) => new Promise((resolve, reject) => {
+  connection.query('SELECT * FROM categories WHERE category_id = ?', id, (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
+
 export default {
   readProduct,
   insertCategory,
@@ -64,4 +71,5 @@ export default {
   deleteCategory,
   checkExistCategory,
   checkRealtionCategoryProduct,
+  viewCategoryDetail,
 };

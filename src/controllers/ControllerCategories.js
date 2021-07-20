@@ -5,6 +5,7 @@ import categoryModel from '../models/categories.js';
 import helpers from '../helpers/helpers.js';
 
 const readCategory = async (req, res, next) => {
+  const StatusPagination = req.query.pagination || 'on';
   const search = req.query.search || '';
   let order = req.query.order || '';
   if (order.toUpperCase() === 'ASC') {
@@ -54,8 +55,10 @@ const readCategory = async (req, res, next) => {
         nextPage,
         prevPage,
       };
-      dataCategories = await categoryModel.readProduct(search, order, fieldOrder, start, limit);
-      return helpers.responsePagination(res, 'success', 200, 'data categories', dataCategories, pagination);
+      if (StatusPagination === 'on') {
+        dataCategories = await categoryModel.readProduct(search, order, fieldOrder, start, limit);
+        return helpers.responsePagination(res, 'success', 200, 'data categories', dataCategories, pagination);
+      }
     }
     dataCategories = await categoryModel.readProduct(search, order, fieldOrder);
     return helpers.response(res, 'success', 200, 'data categories', dataCategories);
@@ -138,6 +141,16 @@ const deleteCategory = async (req, res, next) => {
     next(error);
   }
 };
+
+const viewCategoryDetail = async (req, res, next) => {
+  try {
+    const detailCategory = await categoryModel.viewCategoryDetail(req.params.id);
+    helpers.response(res, 'success', 200, 'detail category', detailCategory);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
-  readCategory, insertCategory, updateCategory, deleteCategory,
+  readCategory, insertCategory, updateCategory, deleteCategory, viewCategoryDetail,
 };
