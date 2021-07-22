@@ -1,8 +1,11 @@
 import bcrypt from 'bcrypt';
 import path from 'path';
 import fs from 'fs/promises';
+import Jwt from 'jsonwebtoken';
+import { v4 as uuidv4 } from 'uuid';
 import helpers from '../helpers/helpers.js';
 import userModel from '../models/users.js';
+import storeModel from '../models/stores.js';
 
 const readUser = async (req, res, next) => {
   const search = req.query.search || '';
@@ -67,26 +70,72 @@ const readUser = async (req, res, next) => {
   }
 };
 
-const register = async (req, res, next) => {
+const insertUser = async (req, res, next) => {
   try {
-    const salt = await bcrypt.genSalt(10);
-    const data = {
-      name: req.body.name,
-      email: req.body.email,
-      password: await bcrypt.hash(req.body.password, salt),
-      avatar: req.body.destinationAvatar,
-      phone_number: req.body.phone_number,
-      gender: req.body.gender,
-      date_of_birth: req.body.date_of_birth,
-    };
-    const addDataUser = await userModel.insertUser(data);
-    helpers.response(res, 'success', 200, 'successfully added category data', addDataUser);
+    const checkExistUser = await userModel.checkExistUser(req.body.email, 'email');
+    if (checkExistUser.length === 0) {
+      const salt = await bcrypt.genSalt(10);
+      let data = {
+        name: req.body.name,
+        email: req.body.email,
+        roles: req.body.roles,
+        password: await bcrypt.hash(req.body.password, salt),
+        phone_number: req.body.phone_number,
+        gender: req.body.gender,
+        date_of_birth: req.body.date_of_birth,
+      };
+      const fileName = uuidv4() + path.extname(req.files.avatar.name);
+      const savePath = path.join(path.dirname(''), '/public/img/avatars', fileName);
+      data = { ...data, avatar: `public/img/avatars/${fileName}` };
+      const addDataUser = await userModel.insertUser(data);
+      if (addDataUser.affectedRows) {
+        req.files.avatar.mv(savePath);
+        if (req.body.roles === 'seller') {
+          const store = {
+            store_name: req.body.store_name,
+            store_description: req.body.store_description,
+            user_id: addDataUser.insertId,
+          };
+          await storeModel.insertStore(store);
+        }
+        helpers.response(res, 'success', 200, 'successfully added user data', addDataUser);
+      }
+    } else {
+      helpers.responseError(res, 'Error', 422, 'Invalid input', {});
+    }
   } catch (error) {
     next(error);
   }
 };
 
-const updateUser = async (req, res, next) => {
+const login = async (req, res, next) => {
+  try {
+    const checkExistUser = await userModel.checkExistUser(req.body.email, 'email');
+    if (checkExistUser.length > 0) {
+      const comparePassword = await bcrypt.compare(req.body.password, checkExistUser[0].password);
+      if (comparePassword) {
+        const {
+          password, user_id: userId, phone_number: phoneNumber, email, ...user
+        } = checkExistUser[0];
+        const token = Jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+        delete checkExistUser[0].password;
+        helpers.response(res, 'Success', 200, 'Login success', { ...checkExistUser[0], token });
+      } else {
+        helpers.responseError(res, 'Authorized failed', 401, 'Wrong password', {
+          password: 'passwords dont match',
+        });
+      }
+    } else {
+      helpers.responseError(res, 'Authorized failed', 401, 'User not Found', {
+        email: 'email not found',
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateUser = async (req, res, next) => { // on progress
   try {
     const salt = await bcrypt.genSalt(10);
     let data = {
@@ -96,7 +145,7 @@ const updateUser = async (req, res, next) => {
       gender: req.body.gender,
       date_of_birth: req.body.date_of_birth,
     };
-    const getDataUser = await userModel.checkExistUser(req.params.id);
+    const getDataUser = await userModel.checkExistUser(req.params.id, 'user_id');
     if (Object.keys(getDataUser).length > 0) {
       if (req.body.new_password) {
         const comparePassword = await bcrypt.compare(req.body.old_password, getDataUser[0].password);
@@ -131,9 +180,9 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-const deleteUser = async (req, res, next) => {
+const deleteUser = async (req, res, next) => { // on progress
   try {
-    const getDataUser = await userModel.checkExistUser(req.params.id);
+    const getDataUser = await userModel.checkExistUser(req.params.id, 'user_id');
     if (Object.keys(getDataUser).length > 0) {
       fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
       const removeDataUser = await userModel.deleteUser(req.params.id);
@@ -151,5 +200,9 @@ const deleteUser = async (req, res, next) => {
 };
 
 export default {
-  register, readUser, updateUser, deleteUser,
+  insertUser,
+  readUser,
+  updateUser,
+  deleteUser,
+  login,
 };

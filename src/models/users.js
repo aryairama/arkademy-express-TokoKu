@@ -37,8 +37,8 @@ const deleteUser = (id) => new Promise((resolve, reject) => {
   });
 });
 
-const checkExistUser = (id) => new Promise((resolve, reject) => {
-  connection.query('SELECT * FROM users where user_id = ?', id, (error, result) => {
+const checkExistUser = (fieldValue, field) => new Promise((resolve, reject) => {
+  connection.query(`SELECT * FROM users where ${field} = ?`, fieldValue, (error, result) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
   });
 });
