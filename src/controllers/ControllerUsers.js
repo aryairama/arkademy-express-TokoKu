@@ -135,12 +135,11 @@ const login = async (req, res, next) => {
   }
 };
 
-const updateUser = async (req, res, next) => { // on progress
+const updateUser = async (req, res, next) => {
   try {
     const salt = await bcrypt.genSalt(10);
     let data = {
       name: req.body.name,
-      email: req.body.email,
       phone_number: req.body.phone_number,
       gender: req.body.gender,
       date_of_birth: req.body.date_of_birth,
@@ -155,21 +154,39 @@ const updateUser = async (req, res, next) => { // on progress
             password: await bcrypt.hash(req.body.new_password, salt),
           };
         } else {
-          if (req.body.destinationAvatar) {
-            fs.unlink(path.join(path.dirname(''), `/${req.body.destinationAvatar}`));
-          }
           return helpers.response(res, 'failed', 401, "passwords don't match", []);
         }
       }
-      if (req.body.destinationAvatar) {
-        fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
-        data = {
-          ...data,
-          avatar: req.body.destinationAvatar,
-        };
+      if (req.body.email) {
+        data = { ...data, email: req.body.email };
+      }
+      if (getDataUser[0].roles === 'custommer') {
+        data = { ...data, roles: req.body.roles };
+      }
+      if (req.files) {
+        if (req.files.avatar) {
+          fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
+          const fileName = uuidv4() + path.extname(req.files.avatar.name);
+          const savePath = path.join(path.dirname(''), '/public/img/avatars', fileName);
+          data = { ...data, avatar: `public/img/avatars/${fileName}` };
+          await req.files.avatar.mv(savePath);
+        }
       }
       const changeDataUser = await userModel.updateUser(data, req.params.id);
       if (changeDataUser.affectedRows) {
+        if (req.body.roles === 'seller') {
+          const checkExistStore = await storeModel.checkExistStore(req.params.id, 'user_id');
+          const store = {
+            store_name: req.body.store_name,
+            store_description: req.body.store_description,
+            user_id: req.params.id,
+          };
+          if (checkExistStore.length === 0) {
+            await storeModel.insertStore(store);
+          } else if (checkExistStore.length > 0) {
+            await storeModel.updateStore(store, checkExistStore[0].store_id);
+          }
+        }
         return helpers.response(res, 'success', 200, 'successfully updated user data', []);
       }
     } else {

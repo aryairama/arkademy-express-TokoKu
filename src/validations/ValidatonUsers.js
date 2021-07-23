@@ -150,7 +150,7 @@ const rulesCreateUpdate = () => [
     .isLength({ min: 10 })
     .withMessage('store description must be more than 10 characters'),
 ];
-const rulesCustomEmail = () => [
+const rulesCreateEmail = () => [
   body('email')
     .notEmpty()
     .withMessage('email is required')
@@ -167,6 +167,23 @@ const rulesCustomEmail = () => [
     })
     .normalizeEmail(),
 ];
+
+const rulesUpdateEmail = () => [
+  body('email')
+    .optional({ nullable: true })
+    .isEmail()
+    .withMessage('The email you entered is not correct')
+    .bail()
+    .custom(async (value) => {
+      const existingEmail = await userModel.checkExistUser(value, 'email');
+      if (existingEmail.length > 0) {
+        throw new Error('e-mail already registered');
+      }
+      return true;
+    })
+    .normalizeEmail(),
+];
+
 const rulesReadUpdateDelete = () => [
   param('id')
     .isNumeric()
@@ -221,7 +238,7 @@ const validate = (method) => {
     return [
       rulesFileUploud,
       rulesCreateImgUser(),
-      rulesCustomEmail(),
+      rulesCreateEmail(),
       rulesCreateUpdate(),
       rulesCreatePassword(),
       validateResult,
@@ -238,7 +255,7 @@ const validate = (method) => {
       rulesFileUploud,
       rulesUpdateImgUser(),
       rulesReadUpdateDelete(),
-      rulesCustomEmail(),
+      rulesUpdateEmail(),
       rulesCreateUpdate(),
       rulesUpdatePassword(),
       validateResult,
