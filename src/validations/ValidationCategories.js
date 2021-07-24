@@ -61,6 +61,7 @@ const rulesUpdateAndDelete = () => [
 const rulesFileUploud = (req, res, next) => {
   if (req.files) {
     if (req.files.img_category) {
+      delete req.files.img_category.data;
       req.body.img_category = { ...req.files.img_category };
     }
   }
@@ -77,6 +78,13 @@ const rulesCreateImgCategory = () => [
         throw new Error('imgProduct must be jpg or png');
       }
       return true;
+    })
+    .bail()
+    .custom((value) => {
+      if (parseInt(value.size, 10) > 2097152) {
+        throw new Error('image size exceeds 2 megabytes');
+      }
+      return true;
     }),
 ];
 
@@ -86,6 +94,13 @@ const rulesUpdateImgCategory = () => [
     .custom((value) => {
       if (value.mimetype !== 'image/png' && value.mimetype !== 'image/jpeg') {
         throw new Error('img category must be jpg or png');
+      }
+      return true;
+    })
+    .bail()
+    .custom((value) => {
+      if (parseInt(value.size, 10) > 2097152) {
+        throw new Error('image size exceeds 2 megabytes');
       }
       return true;
     }),

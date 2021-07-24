@@ -52,6 +52,7 @@ const validateResult = (req, res, next) => {
 const rulesFileUploud = (req, res, next) => {
   if (req.files) {
     if (req.files.avatar) {
+      delete req.files.avatar.data;
       req.body.avatar = { ...req.files.avatar };
     }
   }
@@ -65,7 +66,14 @@ const rulesCreateImgUser = () => [
     .bail()
     .custom((value) => {
       if (value.mimetype !== 'image/png' && value.mimetype !== 'image/jpeg') {
-        throw new Error('imgProduct mmust be jpg or png');
+        throw new Error('avatar must be jpg or png');
+      }
+      return true;
+    })
+    .bail()
+    .custom((value) => {
+      if (parseInt(value.size, 10) > 2097152) {
+        throw new Error('image size exceeds 2 megabytes');
       }
       return true;
     }),
@@ -77,6 +85,13 @@ const rulesUpdateImgUser = () => [
     .custom((value) => {
       if (value.mimetype !== 'image/png' && value.mimetype !== 'image/jpeg') {
         throw new Error('avatar mmust be jpg or png');
+      }
+      return true;
+    })
+    .bail()
+    .custom((value) => {
+      if (parseInt(value.size, 10) > 2097152) {
+        throw new Error('image size exceeds 2 megabytes');
       }
       return true;
     }),
