@@ -115,7 +115,7 @@ const generateToken = (payload, secretKey, option) => Jwt.sign(payload, secretKe
 
 const login = async (req, res, next) => {
   try {
-    const checkExistUser = await userModel.checkExistUser(req.body.email, 'email');
+    const checkExistUser = await userModel.userStatus(req.body.email, 'active');
     if (checkExistUser.length > 0) {
       const comparePassword = await bcrypt.compare(req.body.password, checkExistUser[0].password);
       if (comparePassword) {
@@ -252,25 +252,77 @@ const updateUser = async (req, res, next) => {
 const deleteUser = async (req, res, next) => {
   try {
     const getDataUser = await userModel.checkExistUser(req.params.id, 'user_id');
-    if (Object.keys(getDataUser).length > 0) {
-      const checkRealtionUserOrder = await userModel.checkRealtionUserOrder(req.params.id);
-      const checkExistStore = await storeModel.checkExistStore(req.params.id, 'user_id');
-      const getAllProductsId = await productModel.checkExistProduct(checkExistStore[0].store_id, 'store_id');
-      const productsId = [];
-      getAllProductsId.forEach((value) => productsId.push(value.product_id));
-      const checkExistProductOnOrderDetails = await orderModel.checkExistProductOnOrderDetails(productsId.length === 0 ? '' : productsId);
+    if (Object.keys(getDataUser).length > 0 && getDataUser[0].status !== 'deleted') {
+      const checkRealtionUserOrder = await userModel.checkRealtionUserOrder(req.params.id);// cek punya order
+      const checkExistStore = await storeModel.checkExistStore(req.params.id, 'user_id');// cek punya store
+      let orderNotFinished = 0;
+      let orderProductStore = 0;
+      let haveOrder = 0;
+      let haveOrderStore = 0;
       if (checkRealtionUserOrder.length > 0) {
-        res.json('dia punya order');
-      } else if (checkExistStore.length > 0 && checkExistProductOnOrderDetails.length > 0) {
-        res.json('dia punya toko dan barangnya di order');
+        haveOrder = checkRealtionUserOrder.length;
+        checkRealtionUserOrder.forEach((order) => {
+          if (
+            order.status === 'submit'
+            || order.status === 'processed'
+            || order.status === 'sent'
+            || order.status === 'completed'
+          ) {
+            orderNotFinished += 1;
+          }
+        });
       }
-      // fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
-      // const removeDataUser = await userModel.deleteUser(req.params.id);
-      // if (removeDataUser.affectedRows) {
-      //   helpers.response(res, 'success', 200, 'successfully deleted user data', []);
-      // } else {
-      //   helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
-      // }
+      if (checkExistStore.length > 0) {
+        const getAllProductsId = await productModel.checkExistProduct(checkExistStore[0].store_id, 'store_id'); // get semua produk toko tersebut
+        const productsId = [];
+        getAllProductsId.forEach((value) => productsId.push(value.product_id));
+        const checkExistProductOnOrderDetails = await orderModel.checkExistProductOnOrderDetails(productsId.length === 0 ? '' : productsId);
+        if (checkExistProductOnOrderDetails.length > 0) {
+          haveOrderStore = checkExistProductOnOrderDetails.length;
+          checkExistProductOnOrderDetails.forEach((orderStore) => {
+            if (
+              orderStore.status === 'submit'
+              || orderStore.status === 'processed'
+              || orderStore.status === 'sent'
+              || orderStore.status === 'completed'
+            ) {
+              orderProductStore += 1;
+            }
+          });
+        }
+      }
+      if (orderNotFinished > 0 && orderProductStore > 0) {
+        helpers.responseError(res, 'Failed', 409,
+          'the account cannot be deleted, there are orders in your shop and your orders that have not been completed', []);
+      } else if (orderNotFinished > 0) {
+        helpers.responseError(res, 'Failed', 409, 'the account cannot be deleted, there are orders that have not been completed', []);
+      } else if (orderProductStore > 0) {
+        helpers.responseError(res, 'Failed', 409, 'the account cannot be deleted, there are orders in your store that have not been completed', []);
+      } else if (haveOrder > 0 && haveOrderStore > 0 && orderNotFinished === 0 && orderProductStore === 0) {
+        const changeDataUser = await userModel.updateUser({ status: 'deleted' }, req.params.id);
+        const changeDataStore = await storeModel.updateStore({ status: 'deleted' }, checkExistStore[0].store_id);
+        if (changeDataStore.affectedRows && changeDataUser.affectedRows) {
+          helpers.response(res, 'success', 200, 'successfully deleted user data', []);
+        }
+      } else if (haveOrder > 0 && orderNotFinished === 0) {
+        const changeDataUser = await userModel.updateUser({ status: 'deleted' }, req.params.id);
+        if (changeDataUser.affectedRows) {
+          helpers.response(res, 'success', 200, 'successfully deleted user data', []);
+        }
+      } else if (haveOrderStore > 0 && orderProductStore === 0) {
+        const changeDataUser = await userModel.updateUser({ status: 'deleted' }, req.params.id);
+        const changeDataStore = await storeModel.updateStore({ status: 'deleted' }, checkExistStore[0].store_id);
+        if (changeDataStore.affectedRows && changeDataUser.affectedRows) {
+          helpers.response(res, 'success', 200, 'successfully deleted user data', []);
+        }
+      } else {
+        res.json(getDataUser[0]);
+        // fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
+        // const removeDataUser = await userModel.deleteUser(req.params.id);
+        // if (removeDataUser.affectedRows) {
+        //   helpers.response(res, 'success', 200, 'successfully deleted user data', []);
+        // }
+      }
     } else {
       helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
     }

@@ -44,11 +44,29 @@ const checkExistUser = (fieldValue, field) => new Promise((resolve, reject) => {
 });
 
 const checkRealtionUserOrder = (id) => new Promise((resolve, reject) => {
-  connection.query(`SELECT orders.* , users.* FROM users INNER JOIN orders on orders.user_id = users.user_id
-  WHERE users.user_id = ?`, id, (error, result) => {
+  connection.query(
+    `SELECT orders.*, orders.status AS order_status,users.user_id,users.roles AS user_role,users.email
+  FROM users INNER JOIN orders on orders.user_id = users.user_id
+  WHERE users.user_id = ?`,
+    id,
+    (error, result) => {
+      helpers.promiseResolveReject(resolve, reject, error, result);
+    },
+  );
+});
+
+const userStatus = (email, status) => new Promise((resolve, reject) => {
+  connection.query('SELECT * FROM users WHERE (email = ? AND status = ?)', [email, status], (error, result) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
   });
 });
+
 export default {
-  insertUser, readUser, deleteUser, checkExistUser, updateUser, checkRealtionUserOrder,
+  insertUser,
+  readUser,
+  deleteUser,
+  checkExistUser,
+  updateUser,
+  checkRealtionUserOrder,
+  userStatus,
 };

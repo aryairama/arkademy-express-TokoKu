@@ -6,7 +6,7 @@ import usersModel from '../models/users.js';
 const insertOrder = async (req, res, next) => {
   try {
     let error = 0;
-    const checkUser = await usersModel.checkExistUser(req.body.user_id);
+    const checkUser = await usersModel.checkExistUser(req.body.user_id, 'user_id');
     const getDataProducts = await ordersModel.checkProducts(req.body.product_id);
     if (req.body.product_id.length === getDataProducts.length
     && req.body.product_id.length === req.body.quantity.length
@@ -46,7 +46,9 @@ const insertOrder = async (req, res, next) => {
         });
         const addDataOrderDetail = await ordersModel.insertOrderDetails(orderDetails);
         const updateDataProducts = await ordersModel.updateProducts(updateQuantityProducts, req.body.product_id);
-        if (addDataOrder.affectedRows && addDataOrderDetail.affectedRows && updateDataProducts[0].affectedRows) {
+        const updateDataProductsAffectedRows = updateQuantityProducts.length > 1
+          ? updateDataProducts[0].affectedRows : updateDataProducts.affectedRows;
+        if (addDataOrder.affectedRows && addDataOrderDetail.affectedRows && updateDataProductsAffectedRows) {
           helpers.response(res, 'success', 200, 'successfully added order data', []);
         }
       } else {

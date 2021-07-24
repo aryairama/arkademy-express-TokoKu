@@ -104,7 +104,9 @@ const readOrder = (search, order, fieldOrder, start = '', limit = '') => new Pro
 });
 
 const checkExistProductOnOrderDetails = (id) => new Promise((resolve, reject) => {
-  connection.query('SELECT * FROM order_details where product_id IN (?)', [id], (error, result) => {
+  connection.query(`SELECT orders.status,orders.user_id,order_details.*
+  FROM order_details INNER JOIN orders ON order_details.order_id = orders.order_id
+  where product_id IN (?)`, [id], (error, result) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
   });
 });
