@@ -69,7 +69,7 @@ const readProduct = async (req, res, next) => {
   }
 };
 
-const insertProduct = async (req, res, next) => {
+const insertProduct = async (req, res, next) => { // need update
   try {
     let data = {
       name: req.body.name,
@@ -100,7 +100,7 @@ const insertProduct = async (req, res, next) => {
   }
 };
 
-const updateProduct = async (req, res, next) => {
+const updateProduct = async (req, res, next) => { // need update
   try {
     let data = {
       name: req.body.name,
@@ -115,7 +115,7 @@ const updateProduct = async (req, res, next) => {
       updated_at: new Date(),
     };
     const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
-    const checkExistProduct = await productModel.checkExistProduct(req.params.id);
+    const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
     if (checkCategoryId > 0) {
       if (checkExistProduct.length > 0) {
         if (req.files) {
@@ -145,7 +145,7 @@ const updateProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
   try {
     const checkRealtion = await productModel.checkRealtionOrderDetailsProduct(req.params.id);
-    const checkExistProduct = await productModel.checkExistProduct(req.params.id);
+    const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
     if (checkExistProduct.length > 0) {
       if (checkRealtion.length === 0) {
         const removeDataProduct = await productModel.deleteProduct(req.params.id);

@@ -217,6 +217,16 @@ const rulesUpdatePassword = () => [
     .withMessage('old password length between 8 to 255'),
 ];
 
+// eslint-disable-next-line no-unused-vars
+const rulesStatusUser = () => [
+  body('status')
+    .notEmpty()
+    .withMessage('status user is required')
+    .bail()
+    .isIn(['active', 'deleted'])
+    .withMessage('the value of the gender must be active or deleted'),
+];
+
 const rulesLogin = () => [
   body('email')
     .notEmpty()
@@ -231,6 +241,36 @@ const rulesLogin = () => [
     .bail()
     .isLength({ min: 8, max: 255 })
     .withMessage('password length between 8 to 255'),
+];
+
+const rulesRegisterCustommer = () => [
+  body('name')
+    .notEmpty()
+    .withMessage('name is required')
+    .bail()
+    .isLength({ min: 4, max: 225 })
+    .withMessage('name length between 4 to 255'),
+];
+
+const rulesRegisterSeller = () => [
+  body('name')
+    .notEmpty()
+    .withMessage('name is required')
+    .bail()
+    .isLength({ min: 4, max: 225 })
+    .withMessage('name length between 4 to 255'),
+  body('phone_number')
+    .isNumeric()
+    .withMessage('phone number must be number')
+    .bail()
+    .isLength({ min: 10, max: 15 })
+    .withMessage('phone number must be more than 10 and less than 15 digits'),
+  body('store_name')
+    .notEmpty()
+    .withMessage('store name is required')
+    .bail()
+    .isLength({ min: 5, max: 255 })
+    .withMessage('store name length between 5 to 255'),
 ];
 
 const validate = (method) => {
@@ -263,6 +303,12 @@ const validate = (method) => {
   }
   if (method === 'login') {
     return [rulesLogin(), validateResult];
+  }
+  if (method === 'registerCustommer') {
+    return [rulesRegisterCustommer(), rulesCreateEmail(), rulesCreatePassword(), validateResult];
+  }
+  if (method === 'registerSeller') {
+    return [rulesRegisterSeller(), rulesCreateEmail(), rulesCreatePassword(), validateResult];
   }
   return false;
 };

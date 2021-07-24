@@ -43,6 +43,12 @@ const checkExistUser = (fieldValue, field) => new Promise((resolve, reject) => {
   });
 });
 
+const checkRealtionUserOrder = (id) => new Promise((resolve, reject) => {
+  connection.query(`SELECT orders.* , users.* FROM users INNER JOIN orders on orders.user_id = users.user_id
+  WHERE users.user_id = ?`, id, (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
 export default {
-  insertUser, readUser, deleteUser, checkExistUser, updateUser,
+  insertUser, readUser, deleteUser, checkExistUser, updateUser, checkRealtionUserOrder,
 };

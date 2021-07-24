@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import helpers from '../helpers/helpers.js';
 import userModel from '../models/users.js';
 import storeModel from '../models/stores.js';
+import productModel from '../models/products.js';
+import orderModel from '../models/orders.js';
 
 const readUser = async (req, res, next) => {
   const search = req.query.search || '';
@@ -83,6 +85,7 @@ const insertUser = async (req, res, next) => {
         phone_number: req.body.phone_number,
         gender: req.body.gender,
         date_of_birth: req.body.date_of_birth,
+        status: 'active',
       };
       const fileName = uuidv4() + path.extname(req.files.avatar.name);
       const savePath = path.join(path.dirname(''), '/public/img/avatars', fileName);
@@ -108,6 +111,8 @@ const insertUser = async (req, res, next) => {
   }
 };
 
+const generateToken = (payload, secretKey, option) => Jwt.sign(payload, secretKey, { ...option });
+
 const login = async (req, res, next) => {
   try {
     const checkExistUser = await userModel.checkExistUser(req.body.email, 'email');
@@ -115,11 +120,12 @@ const login = async (req, res, next) => {
       const comparePassword = await bcrypt.compare(req.body.password, checkExistUser[0].password);
       if (comparePassword) {
         const {
-          password, user_id: userId, phone_number: phoneNumber, email, ...user
+          password, phone_number: phoneNumber, email, ...user
         } = checkExistUser[0];
-        const token = Jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
         delete checkExistUser[0].password;
-        helpers.response(res, 'Success', 200, 'Login success', { ...checkExistUser[0], token });
+        const accessToken = generateToken(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 60 * 60 });
+        const refreshToken = generateToken(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: 60 * 60 * 2 });
+        helpers.response(res, 'Success', 200, 'Login success', { ...checkExistUser[0], accessToken, refreshToken });
       } else {
         helpers.responseError(res, 'Authorized failed', 401, 'Wrong password', {
           password: 'passwords dont match',
@@ -129,6 +135,50 @@ const login = async (req, res, next) => {
       helpers.responseError(res, 'Authorized failed', 401, 'User not Found', {
         email: 'email not found',
       });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const registerCustommer = async (req, res, next) => {
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const data = {
+      name: req.body.name,
+      email: req.body.email,
+      roles: 'custommer',
+      password: await bcrypt.hash(req.body.password, salt),
+      status: 'active',
+    };
+    const addDataUser = await userModel.insertUser(data);
+    if (addDataUser.affectedRows) {
+      helpers.response(res, 'success', 200, 'successfully added user data', addDataUser);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const registerSeller = async (req, res, next) => {
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const user = {
+      name: req.body.name,
+      email: req.body.email,
+      roles: 'seller',
+      password: await bcrypt.hash(req.body.password, salt),
+      phone_number: req.body.phone_number,
+      status: 'active',
+    };
+    const addDataUser = await userModel.insertUser(user);
+    if (addDataUser.affectedRows) {
+      const store = {
+        store_name: req.body.store_name,
+        user_id: addDataUser.insertId,
+      };
+      await storeModel.insertStore(store);
+      helpers.response(res, 'success', 200, 'successfully added user data', addDataUser);
     }
   } catch (error) {
     next(error);
@@ -165,7 +215,9 @@ const updateUser = async (req, res, next) => {
       }
       if (req.files) {
         if (req.files.avatar) {
-          fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
+          if (getDataUser[0].avatar && getDataUser[0].avatar.length > 10) {
+            fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
+          }
           const fileName = uuidv4() + path.extname(req.files.avatar.name);
           const savePath = path.join(path.dirname(''), '/public/img/avatars', fileName);
           data = { ...data, avatar: `public/img/avatars/${fileName}` };
@@ -197,17 +249,28 @@ const updateUser = async (req, res, next) => {
   }
 };
 
-const deleteUser = async (req, res, next) => { // on progress
+const deleteUser = async (req, res, next) => {
   try {
     const getDataUser = await userModel.checkExistUser(req.params.id, 'user_id');
     if (Object.keys(getDataUser).length > 0) {
-      fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
-      const removeDataUser = await userModel.deleteUser(req.params.id);
-      if (removeDataUser.affectedRows) {
-        helpers.response(res, 'success', 200, 'successfully deleted user data', []);
-      } else {
-        helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
+      const checkRealtionUserOrder = await userModel.checkRealtionUserOrder(req.params.id);
+      const checkExistStore = await storeModel.checkExistStore(req.params.id, 'user_id');
+      const getAllProductsId = await productModel.checkExistProduct(checkExistStore[0].store_id, 'store_id');
+      const productsId = [];
+      getAllProductsId.forEach((value) => productsId.push(value.product_id));
+      const checkExistProductOnOrderDetails = await orderModel.checkExistProductOnOrderDetails(productsId.length === 0 ? '' : productsId);
+      if (checkRealtionUserOrder.length > 0) {
+        res.json('dia punya order');
+      } else if (checkExistStore.length > 0 && checkExistProductOnOrderDetails.length > 0) {
+        res.json('dia punya toko dan barangnya di order');
       }
+      // fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
+      // const removeDataUser = await userModel.deleteUser(req.params.id);
+      // if (removeDataUser.affectedRows) {
+      //   helpers.response(res, 'success', 200, 'successfully deleted user data', []);
+      // } else {
+      //   helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
+      // }
     } else {
       helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
     }
@@ -222,4 +285,6 @@ export default {
   updateUser,
   deleteUser,
   login,
+  registerCustommer,
+  registerSeller,
 };

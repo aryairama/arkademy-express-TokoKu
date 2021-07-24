@@ -103,6 +103,12 @@ const readOrder = (search, order, fieldOrder, start = '', limit = '') => new Pro
   }
 });
 
+const checkExistProductOnOrderDetails = (id) => new Promise((resolve, reject) => {
+  connection.query('SELECT * FROM order_details where product_id IN (?)', [id], (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
+
 export default {
   checkProducts,
   insertOrder,
@@ -112,4 +118,5 @@ export default {
   getOrderDetails,
   getUserOrder,
   readOrder,
+  checkExistProductOnOrderDetails,
 };

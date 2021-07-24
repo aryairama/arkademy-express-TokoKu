@@ -51,8 +51,8 @@ const checkExistCategory = (id) => new Promise((resolve, reject) => {
   });
 });
 
-const checkExistProduct = (id) => new Promise((resolve, reject) => {
-  connection.query('SELECT * FROM products where product_id = ?', id, (error, result) => {
+const checkExistProduct = (fieldValue, field) => new Promise((resolve, reject) => {
+  connection.query(`SELECT * FROM products where ${field} = ?`, fieldValue, (error, result) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
   });
 });
