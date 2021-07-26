@@ -2,6 +2,10 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs/promises';
 import productModel from '../models/products.js';
+import storeModel from '../models/stores.js';
+import colorModel from '../models/colors.js';
+import colorProductModel from '../models/color_product.js';
+import imgProductsModel from '../models/imgProducts.js';
 import helpers from '../helpers/helpers.js';
 
 const readProduct = async (req, res, next) => {
@@ -69,76 +73,195 @@ const readProduct = async (req, res, next) => {
   }
 };
 
-const insertProduct = async (req, res, next) => { // need update
+const insertProduct = async (req, res, next) => {
   try {
-    let data = {
-      name: req.body.name,
-      brand: req.body.brand,
-      category_id: req.body.category_id,
-      price: req.body.price,
-      colors: req.body.colors,
-      size: req.body.size,
-      quantity: req.body.quantity,
-      product_status: req.body.product_status,
-      description: req.body.description,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-    const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
-    if (checkCategoryId > 0) {
-      const fileName = uuidv4() + path.extname(req.files.imgProduct.name);
-      const savePath = path.join(path.dirname(''), '/public/img/product', fileName);
-      data = { ...data, img_product: `public/img/product/${fileName}` };
-      await req.files.imgProduct.mv(savePath);
-      const addDataProduct = await productModel.insertProduct(data);
-      helpers.response(res, 'success', 200, 'successfully added product data', addDataProduct);
+    if (req.userLogin.roles === 'seller') {
+      const dataStore = await storeModel.checkExistStore(req.userLogin.user_id, 'user_id');
+      const data = {
+        name: req.body.name,
+        brand: req.body.brand,
+        category_id: req.body.category_id,
+        store_id: await dataStore[0].store_id,
+        price: req.body.price,
+        size: req.body.size,
+        quantity: req.body.quantity,
+        product_status: req.body.product_status,
+        description: req.body.description,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      const checkExistColor = await colorModel.checkColors(req.body.colors);
+      const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
+      if (checkCategoryId > 0 && req.body.colors.length === checkExistColor.length) {
+        const addDataProduct = await productModel.insertProduct(data);
+        if (addDataProduct.affectedRows) {
+          const imgProduct = [];
+          if (Array.isArray(req.body.colors)) {
+            await colorProductModel.insertColorProduct(req.body.colors, addDataProduct.insertId);
+          } else {
+            await colorProductModel.insertColorProduct([req.body.colors], addDataProduct.insertId);
+          }
+          if (Array.isArray(req.files.img_product)) {
+            req.files.img_product.forEach((img) => {
+              const fileName = uuidv4() + path.extname(img.name);
+              const savePath = path.join(path.dirname(''), '/public/img/products', fileName);
+              img.mv(savePath);
+              imgProduct.push({
+                product_id: addDataProduct.insertId,
+                img_product: `public/img/products/${fileName}`,
+              });
+            });
+          } else {
+            const fileName = uuidv4() + path.extname(req.files.img_product.name);
+            const savePath = path.join(path.dirname(''), '/public/img/products', fileName);
+            req.files.img_product.mv(savePath);
+            imgProduct.push({
+              product_id: addDataProduct.insertId,
+              img_product: `public/img/products/${fileName}`,
+            });
+          }
+          const addDataImgProduct = await imgProductsModel.insertImgProduct(imgProduct);
+          if (addDataImgProduct.affectedRows) {
+            helpers.response(res, 'success', 200, 'successfully added product data', addDataProduct);
+          }
+        }
+      } else {
+        helpers.responseError(res, 'Wrong data', 404, 'the data entered is not correct', []);
+      }
     } else {
-      helpers.response(res, 'failed', 404, "The category id doesn't exist", []);
+      helpers.responseError(res, 'Access Denied', 403, 'You do not have permission for this service', []);
     }
   } catch (error) {
     next(error);
   }
 };
 
-const updateProduct = async (req, res, next) => { // need update
+const updateProduct = async (req, res, next) => {
   try {
-    let data = {
-      name: req.body.name,
-      brand: req.body.brand,
-      category_id: req.body.category_id,
-      price: req.body.price,
-      colors: req.body.colors,
-      size: req.body.size,
-      quantity: req.body.quantity,
-      product_status: req.body.product_status,
-      description: req.body.description,
-      updated_at: new Date(),
-    };
-    const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
-    const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
-    if (checkCategoryId > 0) {
-      if (checkExistProduct.length > 0) {
-        if (req.files) {
-          if (req.files.imgProduct) {
-            fs.unlink(path.join(path.dirname(''), `/${checkExistProduct[0].img_product}`));
-            const fileName = uuidv4() + path.extname(req.files.imgProduct.name);
-            const savePath = path.join(path.dirname(''), '/public/img/product', fileName);
-            data = { ...data, img_product: `public/img/product/${fileName}` };
-            await req.files.imgProduct.mv(savePath);
-          }
+    if (req.userLogin.roles === 'seller') {
+      const dataStore = await storeModel.checkExistStore(req.userLogin.user_id, 'user_id');
+      const data = {
+        name: req.body.name,
+        brand: req.body.brand,
+        category_id: req.body.category_id,
+        store_id: await dataStore[0].store_id,
+        price: req.body.price,
+        size: req.body.size,
+        quantity: req.body.quantity,
+        product_status: req.body.product_status,
+        description: req.body.description,
+        updated_at: new Date(),
+      };
+      const checkColors = await colorModel.checkColors(req.body.colors);
+      const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
+      const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
+      if (checkColors.length === req.body.colors.length && checkCategoryId > 0 && checkExistProduct.length > 0) {
+        const dataColorProduct = await colorProductModel.getColorProduct(req.params.id, 'product_id');
+        const checkExistImgProducts = await imgProductsModel.checkImgProduct(req.body.old_img_product, req.params.id);
+        const dataImgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
+        if (req.body.old_img_product && checkExistImgProducts.length !== req.body.old_img_product.length) {
+          return helpers.responseError(res, 'Wrong data', 404, 'The data entered is not correct', []);
+        }
+        if (!req.body.img_product && req.body.old_img_product && dataImgProduct.length === req.body.old_img_product.length) {
+          return helpers.responseError(res, 'Wrong action', 403, 'All product images cannot be deleted', []);
+        }
+        const recentColorProduct = [];
+        dataColorProduct.forEach((color) => recentColorProduct.push(color.color_id));
+        let deleteColorProduct = [];
+        let insertColorProduct = [];
+        if (Array.isArray(req.body.colors)) {
+          deleteColorProduct = recentColorProduct.filter((x) => !req.body.colors.includes(x));
+          insertColorProduct = req.body.colors.filter((x) => !recentColorProduct.includes(x));
+        } else {
+          deleteColorProduct = recentColorProduct.filter((x) => ![parseInt(req.body.colors, 10)].includes(x));
+          insertColorProduct = [parseInt(req.body.colors, 10)].filter((x) => !recentColorProduct.includes(x));
+        }
+        if (deleteColorProduct.length > 0) {
+          await colorProductModel.deleteColorProduct(deleteColorProduct, req.params.id);
+        }
+        if (insertColorProduct.length > 0) {
+          await colorProductModel.insertColorProduct(insertColorProduct, req.params.id);
+        }
+        if (Array.isArray(req.body.old_img_product)) {
+          checkExistImgProducts.forEach((img) => {
+            fs.unlink(path.join(path.dirname(''), `/${img.img_product}`));
+          });
+          await imgProductsModel.deleteImgProduct(req.body.old_img_product, req.params.id);
+        } else if (!Array.isArray(req.body.old_img_product) && req.body.old_img_product) {
+          fs.unlink(path.join(path.dirname(''), `/${checkExistImgProducts[0].img_product}`));
+          await imgProductsModel.deleteImgProduct([req.body.old_img_product], req.params.id);
+        }
+        const imgProduct = [];
+        if (Array.isArray(req.body.img_product) && req.body.img_product) {
+          req.files.img_product.forEach((img) => {
+            const fileName = uuidv4() + path.extname(img.name);
+            const savePath = path.join(path.dirname(''), '/public/img/products', fileName);
+            img.mv(savePath);
+            imgProduct.push({
+              product_id: req.params.id,
+              img_product: `public/img/products/${fileName}`,
+            });
+          });
+        } else if (!Array.isArray(req.body.img_product) && req.body.img_product) {
+          const fileName = uuidv4() + path.extname(req.files.img_product.name);
+          const savePath = path.join(path.dirname(''), '/public/img/products', fileName);
+          req.files.img_product.mv(savePath);
+          imgProduct.push({
+            product_id: req.params.id,
+            img_product: `public/img/products/${fileName}`,
+          });
+        }
+        if (req.body.img_product) {
+          await imgProductsModel.insertImgProduct(imgProduct);
         }
         const changeDataProduct = await productModel.updateProduct(data, req.params.id);
         if (changeDataProduct.affectedRows) {
           helpers.response(res, 'success', 200, 'successfully updated product data', []);
         }
       } else {
-        helpers.response(res, 'failed', 404, 'the data you want to change does not exist', []);
+        helpers.responseError(res, 'Wrong data', 404, 'the data entered is not correct', []);
       }
     } else {
-      helpers.response(res, 'failed', 404, "The category id doesn't exist", []);
+      helpers.responseError(res, 'Access Denied', 403, 'You do not have permission for this service', []);
     }
+    // let data = {
+    //   name: req.body.name,
+    //   brand: req.body.brand,
+    //   category_id: req.body.category_id,
+    //   price: req.body.price,
+    //   colors: req.body.colors,
+    //   size: req.body.size,
+    //   quantity: req.body.quantity,
+    //   product_status: req.body.product_status,
+    //   description: req.body.description,
+    //   updated_at: new Date(),
+    // };
+    // const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
+    // const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
+    // if (checkCategoryId > 0) {
+    //   if (checkExistProduct.length > 0) {
+    //     if (req.files) {
+    //       if (req.files.imgProduct) {
+    //         fs.unlink(path.join(path.dirname(''), `/${checkExistProduct[0].img_product}`));
+    //         const fileName = uuidv4() + path.extname(req.files.imgProduct.name);
+    //         const savePath = path.join(path.dirname(''), '/public/img/product', fileName);
+    //         data = { ...data, img_product: `public/img/product/${fileName}` };
+    //         await req.files.imgProduct.mv(savePath);
+    //       }
+    //     }
+    //     const changeDataProduct = await productModel.updateProduct(data, req.params.id);
+    //     if (changeDataProduct.affectedRows) {
+    //       helpers.response(res, 'success', 200, 'successfully updated product data', []);
+    //     }
+    //   } else {
+    //     helpers.response(res, 'failed', 404, 'the data you want to change does not exist', []);
+    //   }
+    // } else {
+    //   helpers.response(res, 'failed', 404, "The category id doesn't exist", []);
+    // }
   } catch (error) {
     next(error);
+    // console.log(error);
   }
 };
 

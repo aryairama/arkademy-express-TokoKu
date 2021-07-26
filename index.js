@@ -19,9 +19,12 @@ app.use('/users', usersRouter);
 app.use('/products', productRouter);
 app.use('/categories', categoryRouter);
 app.use('/orders', ordersRouter);
+app.use('*', (req, res, next) => {
+  next(new Error('Endpoint Not Found'));
+});
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
-  helpers.response(res, 'Error', 500, err.message, []);
+  helpers.responseError(res, 'Error', 500, err.message, []);
 });
 app.listen(port, () => {
   console.log(`server running port ${port}`);
