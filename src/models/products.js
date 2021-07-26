@@ -4,14 +4,16 @@ import helpers from '../helpers/helpers.js';
 const readProduct = (search, order, fieldOrder, start = '', limit = '') => new Promise((resolve, reject) => {
   if (limit !== '' && start !== '') {
     connection.query(
-      `SELECT * FROM products WHERE name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
+      `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) AS img_product
+      FROM products WHERE name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
       (error, result) => {
         helpers.promiseResolveReject(resolve, reject, error, result);
       },
     );
   } else {
     connection.query(
-      `SELECT * FROM products WHERE name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order}`,
+      `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) AS img_product
+      FROM products WHERE name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order}`,
       (error, result) => {
         helpers.promiseResolveReject(resolve, reject, error, result);
       },
@@ -78,9 +80,14 @@ const viewProductDetail = (id) => new Promise((resolve, reject) => {
 });
 
 const readProductCategory = (id) => new Promise((resolve, reject) => {
-  connection.query('SELECT * FROM products where category_id = ?', id, (error, result) => {
-    helpers.promiseResolveReject(resolve, reject, error, result);
-  });
+  connection.query(
+    `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) 
+    AS img_product FROM products where category_id = ?`,
+    id,
+    (error, result) => {
+      helpers.promiseResolveReject(resolve, reject, error, result);
+    },
+  );
 });
 export default {
   readProduct,

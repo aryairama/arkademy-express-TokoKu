@@ -13,7 +13,14 @@ const checkColors = (id) => new Promise((resolve, reject) => {
   });
 });
 
+const getAllColorProduct = (id) => new Promise((resolve, reject) => {
+  connection.query(`SELECT colors.* FROM color_product 
+  INNER JOIN colors ON color_product.color_id = colors.color_id WHERE color_product.product_id = ?`, id, (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
 export default {
   checkExistColor,
   checkColors,
+  getAllColorProduct,
 };

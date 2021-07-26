@@ -261,7 +261,15 @@ const deleteProduct = async (req, res, next) => {
 const viewProductDetail = async (req, res, next) => {
   try {
     const detailProduct = await productModel.viewProductDetail(req.params.id);
-    helpers.response(res, 'success', 200, 'detail product', detailProduct);
+    const imgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
+    const colorProduct = await colorModel.getAllColorProduct(req.params.id);
+    imgProduct.forEach((img) => [delete img.product_id, delete img.img_product_id]);
+    const product = {
+      ...detailProduct[0],
+      img_products: imgProduct,
+      colors: colorProduct,
+    };
+    helpers.response(res, 'success', 200, 'detail product', product);
   } catch (error) {
     next(error);
   }
