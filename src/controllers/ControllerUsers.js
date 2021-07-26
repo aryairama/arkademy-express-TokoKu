@@ -8,6 +8,7 @@ import userModel from '../models/users.js';
 import storeModel from '../models/stores.js';
 import productModel from '../models/products.js';
 import orderModel from '../models/orders.js';
+import imgProductsModel from '../models/imgProducts.js';
 
 const readUser = async (req, res, next) => {
   const search = req.query.search || '';
@@ -316,12 +317,22 @@ const deleteUser = async (req, res, next) => {
           helpers.response(res, 'success', 200, 'successfully deleted user data', []);
         }
       } else {
-        res.json(getDataUser[0]);
-        // fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
-        // const removeDataUser = await userModel.deleteUser(req.params.id);
-        // if (removeDataUser.affectedRows) {
-        //   helpers.response(res, 'success', 200, 'successfully deleted user data', []);
-        // }
+        if (checkExistStore.length > 0) {
+          const getAllProductsId = await productModel.checkExistProduct(checkExistStore[0].store_id, 'store_id');
+          getAllProductsId.forEach(async (value) => {
+            const dataImgProduct = await imgProductsModel.getAllImgProduct(value.product_id);
+            dataImgProduct.forEach((img) => {
+              fs.unlink(path.join(path.dirname(''), `/${img.img_product}`));
+            });
+          });
+        }
+        const removeDataUser = await userModel.deleteUser(req.params.id);
+        if (removeDataUser.affectedRows) {
+          if (getDataUser[0].avatar && getDataUser[0].avatar.length > 10) {
+            fs.unlink(path.join(path.dirname(''), `/${getDataUser[0].avatar}`));
+          }
+          helpers.response(res, 'success', 200, 'successfully deleted user data', []);
+        }
       }
     } else {
       helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
