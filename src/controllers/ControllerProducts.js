@@ -7,6 +7,7 @@ import colorModel from '../models/colors.js';
 import colorProductModel from '../models/color_product.js';
 import imgProductsModel from '../models/imgProducts.js';
 import helpers from '../helpers/helpers.js';
+import connection from '../middlewares/Redis.js';
 
 const readProduct = async (req, res, next) => {
   const search = req.query.search || '';
@@ -64,6 +65,10 @@ const readProduct = async (req, res, next) => {
       };
       dataProducts = await productModel.readProduct(search, order, fieldOrder, start, limit);
       helpers.responsePagination(res, 'success', 200, 'data products', dataProducts, pagination);
+      connection.redis.set(
+        `readProduct-${search}-${order}-${fieldOrder}-${limit}-${page}`,
+        JSON.stringify({ data: dataProducts, pagination }),
+      );
     } else {
       dataProducts = await productModel.readProduct(search, order, fieldOrder);
       helpers.response(res, 'success', 200, 'data products', dataProducts);
@@ -122,6 +127,8 @@ const insertProduct = async (req, res, next) => {
           }
           const addDataImgProduct = await imgProductsModel.insertImgProduct(imgProduct);
           if (addDataImgProduct.affectedRows) {
+            connection.clearRedisCache('readProduct-*');
+            connection.clearRedisCache('readProductCategory/*');
             helpers.response(res, 'success', 200, 'successfully added product data', addDataProduct);
           }
         }
@@ -216,6 +223,9 @@ const updateProduct = async (req, res, next) => {
         }
         const changeDataProduct = await productModel.updateProduct(data, req.params.id);
         if (changeDataProduct.affectedRows) {
+          connection.clearRedisCache(`viewProductDetail/${req.params.id}`);
+          connection.clearRedisCache('readProductCategory/*');
+          connection.clearRedisCache('readProduct-*');
           helpers.response(res, 'success', 200, 'successfully updated product data', []);
         }
       } else {
@@ -241,6 +251,9 @@ const deleteProduct = async (req, res, next) => {
           dataImgProduct.forEach((img) => {
             fs.unlink(path.join(path.dirname(''), `/${img.img_product}`));
           });
+          connection.clearRedisCache(`viewProductDetail/${req.params.id}`);
+          connection.clearRedisCache('readProductCategory/*');
+          connection.clearRedisCache('readProduct-*');
           helpers.response(res, 'success', 200, 'successfully deleted product data', []);
         } else {
           helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
@@ -269,6 +282,7 @@ const viewProductDetail = async (req, res, next) => {
       img_products: imgProduct,
       colors: colorProduct,
     };
+    connection.redis.set(`viewProductDetail/${req.params.id}`, JSON.stringify(product));
     helpers.response(res, 'success', 200, 'detail product', product);
   } catch (error) {
     next(error);
@@ -278,6 +292,7 @@ const viewProductDetail = async (req, res, next) => {
 const readProductCategory = async (req, res, next) => {
   try {
     const productByCategory = await productModel.readProductCategory(req.params.id);
+    connection.redis.set(`readProductCategory/${req.params.id}`, JSON.stringify(productByCategory));
     helpers.response(res, 'success', 200, 'data products', productByCategory);
   } catch (error) {
     next(error);
