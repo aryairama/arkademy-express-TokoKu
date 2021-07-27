@@ -3,12 +3,14 @@ import path from 'path';
 import fs from 'fs/promises';
 import Jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
+import { genAccessToken, genRefreshToken } from '../helpers/jwt.js';
 import helpers from '../helpers/helpers.js';
 import userModel from '../models/users.js';
 import storeModel from '../models/stores.js';
 import productModel from '../models/products.js';
 import orderModel from '../models/orders.js';
 import imgProductsModel from '../models/imgProducts.js';
+import connection from '../middlewares/Redis.js';
 
 const readUser = async (req, res, next) => {
   const search = req.query.search || '';
@@ -112,8 +114,6 @@ const insertUser = async (req, res, next) => {
   }
 };
 
-const generateToken = (payload, secretKey, option) => Jwt.sign(payload, secretKey, { ...option });
-
 const login = async (req, res, next) => {
   try {
     const checkExistUser = await userModel.userStatus(req.body.email, 'active');
@@ -124,8 +124,8 @@ const login = async (req, res, next) => {
           password, phone_number: phoneNumber, email, ...user
         } = checkExistUser[0];
         delete checkExistUser[0].password;
-        const accessToken = generateToken(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 60 * 60 });
-        const refreshToken = generateToken(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: 60 * 60 * 2 });
+        const accessToken = await genAccessToken(user, { expiresIn: 60 * 60 });
+        const refreshToken = await genRefreshToken(user, { expiresIn: 60 * 60 * 2 });
         helpers.response(res, 'Success', 200, 'Login success', { ...checkExistUser[0], accessToken, refreshToken });
       } else {
         helpers.responseError(res, 'Authorized failed', 401, 'Wrong password', {
@@ -137,6 +137,69 @@ const login = async (req, res, next) => {
         email: 'email not found',
       });
     }
+  } catch (error) {
+    next(error);
+  }
+};
+
+const refreshToken = async (req, res, next) => {
+  try {
+    const refToken = req.body.refreshToken;
+    if (!refToken) {
+      helpers.responseError(res, 'Authorized failed', 401, 'Server need refreshToken', []);
+    }
+    Jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET, (err, decode) => {
+      if (err) {
+        if (err.name === 'TokenExpiredError') {
+          helpers.responseError(res, 'Authorized failed', 401, 'token expired', []);
+        } else if (err.name === 'JsonWebTokenError') {
+          helpers.responseError(res, 'Authorized failed', 401, 'token invalid', []);
+        } else {
+          helpers.responseError(res, 'Authorized failed', 401, 'token not active', []);
+        }
+      }
+      // eslint-disable-next-line no-unused-vars
+      const cacheRefToken = connection.redis.get(`jwtRefToken-${decode.user_id}`, async (error, cacheToken) => {
+        if (cacheToken === refToken) {
+          delete decode.iat;
+          delete decode.exp;
+          const accessToken = await genAccessToken(decode, { expiresIn: 60 * 60 });
+          helpers.response(res, 'Success', 200, 'AccessToken', { accessToken });
+        } else {
+          helpers.responseError(res, 'Authorized failed', 403, 'Wrong refreshToken', []);
+        }
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const logout = (req, res, next) => {
+  try {
+    const refToken = req.body.refreshToken;
+    if (!refToken) {
+      helpers.responseError(res, 'Authorized failed', 401, 'Server need refreshToken', []);
+    }
+    Jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET, (err, decode) => {
+      if (err) {
+        if (err.name === 'TokenExpiredError') {
+          helpers.responseError(res, 'Authorized failed', 401, 'token expired', []);
+        } else if (err.name === 'JsonWebTokenError') {
+          helpers.responseError(res, 'Authorized failed', 401, 'token invalid', []);
+        } else {
+          helpers.responseError(res, 'Authorized failed', 401, 'token not active', []);
+        }
+      }
+      // eslint-disable-next-line no-unused-vars
+      connection.redis.del(`jwtRefToken-${decode.user_id}`, (error, result) => {
+        if (error) {
+          next(error);
+        } else {
+          helpers.response(res, 'Logout', 200, 'Logout success', []);
+        }
+      });
+    });
   } catch (error) {
     next(error);
   }
@@ -350,4 +413,6 @@ export default {
   login,
   registerCustommer,
   registerSeller,
+  refreshToken,
+  logout,
 };
