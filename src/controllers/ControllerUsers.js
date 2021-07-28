@@ -177,28 +177,13 @@ const refreshToken = async (req, res, next) => {
 
 const logout = (req, res, next) => {
   try {
-    const refToken = req.body.refreshToken;
-    if (!refToken) {
-      helpers.responseError(res, 'Authorized failed', 401, 'Server need refreshToken', []);
-    }
-    Jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET, (err, decode) => {
-      if (err) {
-        if (err.name === 'TokenExpiredError') {
-          helpers.responseError(res, 'Authorized failed', 401, 'token expired', []);
-        } else if (err.name === 'JsonWebTokenError') {
-          helpers.responseError(res, 'Authorized failed', 401, 'token invalid', []);
-        } else {
-          helpers.responseError(res, 'Authorized failed', 401, 'token not active', []);
-        }
+    // eslint-disable-next-line no-unused-vars
+    connection.redis.del(`jwtRefToken-${req.userLogin.user_id}`, (error, result) => {
+      if (error) {
+        next(error);
+      } else {
+        helpers.response(res, 'Logout', 200, 'Logout success', []);
       }
-      // eslint-disable-next-line no-unused-vars
-      connection.redis.del(`jwtRefToken-${decode.user_id}`, (error, result) => {
-        if (error) {
-          next(error);
-        } else {
-          helpers.response(res, 'Logout', 200, 'Logout success', []);
-        }
-      });
     });
   } catch (error) {
     next(error);
