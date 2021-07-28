@@ -1,7 +1,7 @@
 import Jwt from 'jsonwebtoken';
 import helpers from '../helpers/helpers.js';
 
-const Auth = (req, res, next) => {
+export const Auth = (req, res, next) => {
   try {
     const accessToken = req.headers.authorization;
     if (!accessToken) {
@@ -25,4 +25,19 @@ const Auth = (req, res, next) => {
   }
 };
 
-export default Auth;
+export const Role = (...roles) => (req, res, next) => {
+  let accesDenied = 0;
+  for (let i = 0; i < roles.length; i += 1) {
+    if (req.userLogin.roles !== roles[i]) {
+      accesDenied += 1;
+    } else if (req.userLogin.roles === roles[i]) {
+      accesDenied = 0;
+      break;
+    }
+  }
+  if (accesDenied === 0) {
+    next();
+  } else if (accesDenied > 0) {
+    helpers.responseError(res, 'Access Denied', 403, 'You do not have permission for this service', []);
+  }
+};
