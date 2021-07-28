@@ -8,7 +8,7 @@ import helpers from '../helpers/helpers.js';
 import userModel from '../models/users.js';
 import storeModel from '../models/stores.js';
 import productModel from '../models/products.js';
-import orderModel from '../models/orders.js';
+import orderModel from '../models/orderProducts.js';
 import imgProductsModel from '../models/imgProducts.js';
 import connection from '../middlewares/Redis.js';
 

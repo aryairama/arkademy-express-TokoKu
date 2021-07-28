@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import helpers from '../helpers/helpers.js';
-import ordersModel from '../models/orders.js';
+import ordersModel from '../models/orderProducts.js';
 import usersModel from '../models/users.js';
 
 const insertOrder = async (req, res, next) => {
