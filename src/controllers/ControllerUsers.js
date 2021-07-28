@@ -146,7 +146,7 @@ const refreshToken = async (req, res, next) => {
   try {
     const refToken = req.body.refreshToken;
     if (!refToken) {
-      helpers.responseError(res, 'Authorized failed', 401, 'Server need refreshToken', []);
+      return helpers.responseError(res, 'Authorized failed', 401, 'Server need refreshToken', []);
     }
     Jwt.verify(refToken, process.env.REFRESH_TOKEN_SECRET, (err, decode) => {
       if (err) {

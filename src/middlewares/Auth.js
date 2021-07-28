@@ -5,7 +5,7 @@ const Auth = (req, res, next) => {
   try {
     const accessToken = req.headers.authorization;
     if (!accessToken) {
-      helpers.responseError(res, 'Authorized failed', 401, 'Server need accessToken', []);
+      return helpers.responseError(res, 'Authorized failed', 401, 'Server need accessToken', []);
     }
     const token = accessToken.split(' ')[1];
     Jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
