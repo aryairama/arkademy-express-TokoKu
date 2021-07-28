@@ -18,7 +18,7 @@ export const genRefreshToken = (payload, option) => new Promise((resolve, reject
       console.log(err);
       reject(err);
     }
-    connecion.redis.set(`jwtRefToken-${payload.user_id}`, token);
+    connecion.redis.set(`jwtRefToken-${payload.user_id}`, token, 'EX', option.expiresIn);
     resolve(token);
   });
 });

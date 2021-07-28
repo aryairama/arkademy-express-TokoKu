@@ -241,30 +241,34 @@ const updateProduct = async (req, res, next) => {
 
 const deleteProduct = async (req, res, next) => {
   try {
-    const checkRealtion = await productModel.checkRealtionOrderDetailsProduct(req.params.id);
-    const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
-    if (checkExistProduct.length > 0) {
-      if (checkRealtion.length === 0) {
-        const dataImgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
-        const removeDataProduct = await productModel.deleteProduct(req.params.id);
-        if (removeDataProduct.affectedRows) {
-          dataImgProduct.forEach((img) => {
-            fs.unlink(path.join(path.dirname(''), `/${img.img_product}`));
-          });
-          connection.clearRedisCache(`viewProductDetail/${req.params.id}`);
-          connection.clearRedisCache('readProductCategory/*');
-          connection.clearRedisCache('readProduct-*');
-          helpers.response(res, 'success', 200, 'successfully deleted product data', []);
-        } else {
-          helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
+    if (req.userLogin.roles === 'seller') {
+      const checkRealtion = await productModel.checkRealtionOrderDetailsProduct(req.params.id);
+      const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
+      if (checkExistProduct.length > 0) {
+        if (checkRealtion.length === 0) {
+          const dataImgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
+          const removeDataProduct = await productModel.deleteProduct(req.params.id);
+          if (removeDataProduct.affectedRows) {
+            dataImgProduct.forEach((img) => {
+              fs.unlink(path.join(path.dirname(''), `/${img.img_product}`));
+            });
+            connection.clearRedisCache(`viewProductDetail/${req.params.id}`);
+            connection.clearRedisCache('readProductCategory/*');
+            connection.clearRedisCache('readProduct-*');
+            helpers.response(res, 'success', 200, 'successfully deleted product data', []);
+          } else {
+            helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
+          }
+        } else if (checkRealtion.length > 0) {
+          helpers.response(
+            res, 'data relation', 409, 'product data cannot be deleted because it is related to other data', [],
+          );
         }
-      } else if (checkRealtion.length > 0) {
-        helpers.response(
-          res, 'data relation', 409, 'product data cannot be deleted because it is related to other data', [],
-        );
+      } else {
+        helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
       }
     } else {
-      helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
+      helpers.responseError(res, 'Access Denied', 403, 'You do not have permission for this service', []);
     }
   } catch (error) {
     next(error);
