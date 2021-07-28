@@ -10,7 +10,7 @@ import storeModel from '../models/stores.js';
 import productModel from '../models/products.js';
 import orderModel from '../models/orderProducts.js';
 import imgProductsModel from '../models/imgProducts.js';
-import connection from '../middlewares/Redis.js';
+import { redis } from '../middlewares/Redis.js';
 
 const readUser = async (req, res, next) => {
   const search = req.query.search || '';
@@ -159,7 +159,7 @@ const refreshToken = async (req, res, next) => {
         }
       }
       // eslint-disable-next-line no-unused-vars
-      const cacheRefToken = connection.redis.get(`jwtRefToken-${decode.user_id}`, async (error, cacheToken) => {
+      const cacheRefToken = redis.get(`jwtRefToken-${decode.user_id}`, async (error, cacheToken) => {
         if (cacheToken === refToken) {
           delete decode.iat;
           delete decode.exp;
@@ -178,7 +178,7 @@ const refreshToken = async (req, res, next) => {
 const logout = (req, res, next) => {
   try {
     // eslint-disable-next-line no-unused-vars
-    connection.redis.del(`jwtRefToken-${req.userLogin.user_id}`, (error, result) => {
+    redis.del(`jwtRefToken-${req.userLogin.user_id}`, (error, result) => {
       if (error) {
         next(error);
       } else {

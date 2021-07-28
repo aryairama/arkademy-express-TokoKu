@@ -1,14 +1,14 @@
 import Redis from 'ioredis';
 import helpers from '../helpers/helpers.js';
 
-const redis = new Redis({
+export const redis = new Redis({
   port: process.env.PORT_REDIS,
   host: process.env.HOST_REDIS,
   password: process.env.AUTH_REDIS,
   db: 0,
 });
 
-const hitCacheAllProduct = (req, res, next) => {
+export const hitCacheAllProduct = (req, res, next) => {
   const search = req.query.search || '';
   let order = req.query.order || '';
   if (order.toUpperCase() === 'ASC') {
@@ -46,7 +46,7 @@ const hitCacheAllProduct = (req, res, next) => {
   });
 };
 
-const hitCacheProductDetail = (req, res, next) => {
+export const hitCacheProductDetail = (req, res, next) => {
   redis.get(`viewProductDetail/${req.params.id}`, (error, result) => {
     if (result !== null) {
       helpers.response(res, 'success', 200, 'detail product', JSON.parse(result));
@@ -58,7 +58,7 @@ const hitCacheProductDetail = (req, res, next) => {
   });
 };
 
-const hitCacheAllProductCategory = (req, res, next) => {
+export const hitCacheAllProductCategory = (req, res, next) => {
   redis.get(`readProductCategory/${req.params.id}`, (error, result) => {
     if (result !== null) {
       helpers.response(res, 'success', 200, 'data products', JSON.parse(result));
@@ -70,18 +70,12 @@ const hitCacheAllProductCategory = (req, res, next) => {
   });
 };
 
-const clearRedisCache = (pattern) => {
-  redis.keys(pattern, (error, result) => {
-    result.forEach((redisCache) => {
-      redis.del(redisCache);
+export const clearRedisCache = (...patterns) => {
+  patterns.forEach((pattern) => {
+    redis.keys(pattern, (error, result) => {
+      result.forEach((redisCache) => {
+        redis.del(redisCache);
+      });
     });
   });
-};
-
-export default {
-  hitCacheAllProduct,
-  redis,
-  clearRedisCache,
-  hitCacheProductDetail,
-  hitCacheAllProductCategory,
 };

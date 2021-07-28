@@ -11,12 +11,11 @@ const Auth = (req, res, next) => {
     Jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
       if (err) {
         if (err.name === 'TokenExpiredError') {
-          helpers.responseError(res, 'Authorized failed', 401, 'token expired', []);
-        } else if (err.name === 'JsonWebTokenError') {
-          helpers.responseError(res, 'Authorized failed', 401, 'token invalid', []);
-        } else {
-          helpers.responseError(res, 'Authorized failed', 401, 'token not active', []);
+          return helpers.responseError(res, 'Authorized failed', 401, 'token expired', []);
+        } if (err.name === 'JsonWebTokenError') {
+          return helpers.responseError(res, 'Authorized failed', 401, 'token invalid', []);
         }
+        return helpers.responseError(res, 'Authorized failed', 401, 'token not active', []);
       }
       req.userLogin = decode;
       next();
