@@ -163,8 +163,10 @@ const refreshToken = async (req, res, next) => {
         if (cacheToken === refToken) {
           delete decode.iat;
           delete decode.exp;
+          redis.del(`jwtRefToken-${decode.user_id}`);
           const accessToken = await genAccessToken(decode, { expiresIn: 60 * 60 });
-          helpers.response(res, 'Success', 200, 'AccessToken', { accessToken });
+          const newRefToken = await genRefreshToken(decode, { expiresIn: 60 * 60 * 2 });
+          helpers.response(res, 'Success', 200, 'AccessToken', { accessToken, refreshToken: newRefToken });
         } else {
           helpers.responseError(res, 'Authorized failed', 403, 'Wrong refreshToken', []);
         }
