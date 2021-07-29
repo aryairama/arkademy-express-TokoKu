@@ -160,8 +160,8 @@ const updateProduct = async (req, res, next) => {
       };
       const checkColors = await colorModel.checkColors(req.body.colors);
       const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
-      const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
-      if (checkColors.length === req.body.colors.length && checkCategoryId > 0 && checkExistProduct.length > 0) {
+      const checkExistProductRelatedStore = await productModel.checkExistProductRelatedStore(req.params.id, dataStore[0].store_id);
+      if (checkColors.length === req.body.colors.length && checkCategoryId > 0 && checkExistProductRelatedStore.length > 0) {
         const dataColorProduct = await colorProductModel.getColorProduct(req.params.id, 'product_id');
         const checkExistImgProducts = await imgProductsModel.checkImgProduct(req.body.old_img_product, req.params.id);
         const dataImgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
@@ -239,9 +239,10 @@ const updateProduct = async (req, res, next) => {
 const deleteProduct = async (req, res, next) => {
   try {
     if (req.userLogin.roles === 'seller') {
+      const dataStore = await storeModel.checkExistStore(req.userLogin.user_id, 'user_id');
       const checkRealtion = await productModel.checkRealtionOrderDetailsProduct(req.params.id);
-      const checkExistProduct = await productModel.checkExistProduct(req.params.id, 'product_id');
-      if (checkExistProduct.length > 0) {
+      const checkExistProductRelatedStore = await productModel.checkExistProductRelatedStore(req.params.id, dataStore[0].store_id);
+      if (checkExistProductRelatedStore.length > 0) {
         if (checkRealtion.length === 0) {
           const dataImgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
           const removeDataProduct = await productModel.deleteProduct(req.params.id);
