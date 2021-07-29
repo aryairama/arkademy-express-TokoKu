@@ -1,3 +1,6 @@
+import mailer from '../configs/nodemailer.js';
+import templateVerifEmail from '../template/verifEmail.js';
+
 const response = (res, status, statusCode, message, data) => {
   res.status(statusCode).json({
     status,
@@ -32,6 +35,20 @@ const promiseResolveReject = (resolve, reject, error, result) => {
     reject(error);
   }
 };
+
+const sendVerifEmailRegister = async (token, emailTo, name) => {
+  await mailer.sendMail({
+    from: `"Ceo TokoKu" <${process.env.NODEMAILER_AUTH_USER}>`,
+    to: emailTo,
+    subject: 'Verify Email Address',
+    html: templateVerifEmail(token, name),
+  });
+};
+
 export default {
-  response, responseError, promiseResolveReject, responsePagination,
+  response,
+  responseError,
+  promiseResolveReject,
+  responsePagination,
+  sendVerifEmailRegister,
 };

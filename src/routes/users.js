@@ -12,8 +12,9 @@ router
   .post('/register/custommer', ValidatonUsers('registerCustommer'), ControllerUsers.registerCustommer)
   .post('/register/seller', ValidatonUsers('registerSeller'), ControllerUsers.registerSeller)
   .post('/refreshtoken', ControllerUsers.refreshToken)
+  .post('/verifregisteremail', ControllerUsers.verifregisteremail)
   .delete('/logout', Auth, ControllerUsers.logout)
   .post('/:id', Auth, Role('admin', 'custommer', 'seller'), ValidatonUsers('update'), ControllerUsers.updateUser)
-  .delete('/:id', Auth, Role('admin'), ValidatonUsers('delete'), ControllerUsers.deleteUser);
+  .delete('/:id', Auth, Role('admin', 'custommer', 'seller'), ValidatonUsers('delete'), ControllerUsers.deleteUser);
 
 export default router;

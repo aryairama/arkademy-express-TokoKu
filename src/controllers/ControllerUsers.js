@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import Jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
-import { genAccessToken, genRefreshToken } from '../helpers/jwt.js';
+import { genAccessToken, genRefreshToken, genVerifEmailToken } from '../helpers/jwt.js';
 import helpers from '../helpers/helpers.js';
 import userModel from '../models/users.js';
 import storeModel from '../models/stores.js';
@@ -118,6 +118,10 @@ const login = async (req, res, next) => {
   try {
     const checkExistUser = await userModel.userStatus(req.body.email, 'active');
     if (checkExistUser.length > 0) {
+      console.log(checkExistUser);
+      if (checkExistUser[0].verif_email === 0) {
+        return helpers.responseError(res, 'Email not verified', 403, 'Email has not been verified', []);
+      }
       const comparePassword = await bcrypt.compare(req.body.password, checkExistUser[0].password);
       if (comparePassword) {
         const {
@@ -205,6 +209,10 @@ const registerCustommer = async (req, res, next) => {
     const addDataUser = await userModel.insertUser(data);
     if (addDataUser.affectedRows) {
       helpers.response(res, 'success', 200, 'successfully added user data', addDataUser);
+      delete data.password;
+      delete data.email;
+      const token = await genVerifEmailToken({ ...data, user_id: addDataUser.insertId }, { expiresIn: 60 * 60 });
+      await helpers.sendVerifEmailRegister(token, req.body.email, req.body.name);
     }
   } catch (error) {
     next(error);
@@ -230,6 +238,10 @@ const registerSeller = async (req, res, next) => {
       };
       await storeModel.insertStore(store);
       helpers.response(res, 'success', 200, 'successfully added user data', addDataUser);
+      delete user.password;
+      delete user.email;
+      const token = await genVerifEmailToken({ ...user, user_id: addDataUser.insertId }, { expiresIn: 60 * 60 });
+      await helpers.sendVerifEmailRegister(token, req.body.email, req.body.name);
     }
   } catch (error) {
     next(error);
@@ -392,6 +404,34 @@ const deleteUser = async (req, res, next) => {
   }
 };
 
+const verifregisteremail = (req, res, next) => {
+  try {
+    Jwt.verify(req.body.token, process.env.VERIF_EMAIL_TOKEN_SECRET, (err, decode) => {
+      if (err) {
+        return helpers.responseError(res, 'Verif failed', 403, 'Verif Register Email failed', []);
+      }
+      redis.get(`jwtEmailVerToken-${decode.user_id}`, async (error, result) => {
+        if (result !== null) {
+          const updateVerifEmail = await userModel.updateUser({ verif_email: 1 }, decode.user_id);
+          if (updateVerifEmail.affectedRows) {
+            redis.del(`jwtEmailVerToken-${decode.user_id}`);
+            return helpers.response(res, 'success', 200, 'successfully verified email', []);
+          }
+        } else {
+          const checkVerifEmail = await userModel.checkExistUser(decode.user_id, 'user_id');
+          if (checkVerifEmail[0].verif_email === 1) {
+            helpers.response(res, 'success', 201, 'Email is verified', []);
+          } else if (checkVerifEmail[0].verif_email === 0) {
+            helpers.responseError(res, 'Verif failed', 403, 'Verif Register Email failed', []);
+          }
+        }
+      });
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 export default {
   insertUser,
   readUser,
@@ -402,4 +442,5 @@ export default {
   registerSeller,
   refreshToken,
   logout,
+  verifregisteremail,
 };

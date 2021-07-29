@@ -22,3 +22,14 @@ export const genRefreshToken = (payload, option) => new Promise((resolve, reject
     resolve(token);
   });
 });
+
+export const genVerifEmailToken = (payload, option) => new Promise((resolve, reject) => {
+  Jwt.sign(payload, process.env.VERIF_EMAIL_TOKEN_SECRET, { ...option }, (err, token) => {
+    if (err) {
+      console.log(err);
+      reject(err);
+    }
+    redis.set(`jwtEmailVerToken-${payload.user_id}`, token, 'EX', option.expiresIn);
+    resolve(token);
+  });
+});
