@@ -59,9 +59,12 @@ export const hitCacheProductDetail = (req, res, next) => {
 };
 
 export const hitCacheAllProductCategory = (req, res, next) => {
-  redis.get(`readProductCategory/${req.params.id}`, (error, result) => {
+  const page = req.query.page || 1;
+  const limit = req.query.limit || 5;
+  redis.get(`readProductCategory/${req.params.id}-${limit}-${page}`, (error, result) => {
     if (result !== null) {
-      helpers.response(res, 'success', 200, 'data products', JSON.parse(result));
+      const { data, pagination } = JSON.parse(result);
+      helpers.responsePagination(res, 'success', 200, 'data products', data, pagination);
       console.log('redis cache readProductCategory');
     } else {
       console.log('no cache');

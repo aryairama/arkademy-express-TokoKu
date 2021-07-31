@@ -85,15 +85,26 @@ const viewProductDetail = (id) => new Promise((resolve, reject) => {
   );
 });
 
-const readProductCategory = (id) => new Promise((resolve, reject) => {
-  connection.query(
-    `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) 
-    AS img_product FROM products where category_id = ?`,
-    id,
-    (error, result) => {
-      helpers.promiseResolveReject(resolve, reject, error, result);
-    },
-  );
+const readProductCategory = (id, limit = '', start = '') => new Promise((resolve, reject) => {
+  if (limit !== '' && start !== '') {
+    connection.query(
+      `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) 
+      AS img_product FROM products where category_id = ? LIMIT ${start},${limit}`,
+      id,
+      (error, result) => {
+        helpers.promiseResolveReject(resolve, reject, error, result);
+      },
+    );
+  } else {
+    connection.query(
+      `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) 
+      AS img_product FROM products where category_id = ?`,
+      id,
+      (error, result) => {
+        helpers.promiseResolveReject(resolve, reject, error, result);
+      },
+    );
+  }
 });
 export default {
   readProduct,

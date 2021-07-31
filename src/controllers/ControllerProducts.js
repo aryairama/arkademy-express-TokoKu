@@ -291,9 +291,44 @@ const viewProductDetail = async (req, res, next) => {
 
 const readProductCategory = async (req, res, next) => {
   try {
+    let pagination;
+    let dataProductByCategory;
     const productByCategory = await productModel.readProductCategory(req.params.id);
-    redis.set(`readProductCategory/${req.params.id}`, JSON.stringify(productByCategory));
-    helpers.response(res, 'success', 200, 'data products', productByCategory);
+    if (productByCategory.length > 0) {
+      const limit = req.query.limit || 5;
+      const pages = Math.ceil(productByCategory.length / limit);
+      let page = req.query.page || 1;
+      let nextPage = parseInt(page, 10) + 1;
+      let prevPage = parseInt(page, 10) - 1;
+      if (nextPage > pages) {
+        nextPage = pages;
+      }
+      if (prevPage < 1) {
+        prevPage = 1;
+      }
+      if (page > pages) {
+        page = pages;
+      } else if (page < 1) {
+        page = 1;
+      }
+      const start = (page - 1) * limit;
+      pagination = {
+        countData: productByCategory.length,
+        pages,
+        limit: parseInt(limit, 10),
+        curentPage: parseInt(page, 10),
+        nextPage,
+        prevPage,
+      };
+      dataProductByCategory = await productModel.readProductCategory(req.params.id, limit, start);
+      helpers.responsePagination(res, 'success', 200, 'data products', dataProductByCategory, pagination);
+      redis.set(
+        `readProductCategory/${req.params.id}-${limit}-${page}`,
+        JSON.stringify({ data: dataProductByCategory, pagination }),
+      );
+    } else {
+      helpers.response(res, 'success', 200, 'data products', dataProductByCategory);
+    }
   } catch (error) {
     next(error);
   }
