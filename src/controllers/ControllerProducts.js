@@ -276,7 +276,7 @@ const viewProductDetail = async (req, res, next) => {
     const detailProduct = await productModel.viewProductDetail(req.params.id);
     const imgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
     const colorProduct = await colorModel.getAllColorProduct(req.params.id);
-    imgProduct.forEach((img) => [delete img.product_id, delete img.img_product_id]);
+    imgProduct.forEach((img) => [delete img.product_id]);
     const product = {
       ...detailProduct[0],
       img_products: imgProduct,
