@@ -7,6 +7,21 @@ const checkExistColor = (fieldValue, field) => new Promise((resolve, reject) => 
   });
 });
 
+const readColor = (search, order, fieldOrder, start = '', limit = '') => new Promise((resolve, reject) => {
+  if (limit !== '' && start !== '') {
+    connection.query(
+      `SELECT * FROM colors WHERE color_name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order} LIMIT ${start},${limit}`,
+      (error, result) => {
+        helpers.promiseResolveReject(resolve, reject, error, result);
+      },
+    );
+  } else {
+    connection.query(`SELECT * FROM colors WHERE color_name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order}`, (error, result) => {
+      helpers.promiseResolveReject(resolve, reject, error, result);
+    });
+  }
+});
+
 const checkColors = (id) => new Promise((resolve, reject) => {
   connection.query('SELECT * FROM colors WHERE color_id IN (?)', [id], (error, result) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
@@ -14,13 +29,18 @@ const checkColors = (id) => new Promise((resolve, reject) => {
 });
 
 const getAllColorProduct = (id) => new Promise((resolve, reject) => {
-  connection.query(`SELECT colors.* FROM color_product 
-  INNER JOIN colors ON color_product.color_id = colors.color_id WHERE color_product.product_id = ?`, id, (error, result) => {
-    helpers.promiseResolveReject(resolve, reject, error, result);
-  });
+  connection.query(
+    `SELECT colors.* FROM color_product 
+  INNER JOIN colors ON color_product.color_id = colors.color_id WHERE color_product.product_id = ?`,
+    id,
+    (error, result) => {
+      helpers.promiseResolveReject(resolve, reject, error, result);
+    },
+  );
 });
 export default {
   checkExistColor,
   checkColors,
   getAllColorProduct,
+  readColor,
 };
