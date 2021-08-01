@@ -145,7 +145,7 @@ const deleteCategory = async (req, res, next) => {
 const viewCategoryDetail = async (req, res, next) => {
   try {
     const detailCategory = await categoryModel.viewCategoryDetail(req.params.id);
-    helpers.response(res, 'success', 200, 'detail category', detailCategory);
+    helpers.response(res, 'success', 200, 'detail category', { ...detailCategory[0] });
   } catch (error) {
     next(error);
   }
