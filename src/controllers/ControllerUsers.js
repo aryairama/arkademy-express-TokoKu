@@ -118,7 +118,6 @@ const login = async (req, res, next) => {
   try {
     const checkExistUser = await userModel.userStatus(req.body.email, 'active');
     if (checkExistUser.length > 0) {
-      console.log(checkExistUser);
       if (checkExistUser[0].verif_email === 0) {
         return helpers.responseError(res, 'Email not verified', 403, 'Email has not been verified', []);
       }

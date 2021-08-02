@@ -327,7 +327,7 @@ const readProductCategory = async (req, res, next) => {
         JSON.stringify({ data: dataProductByCategory, pagination }),
       );
     } else {
-      helpers.response(res, 'success', 200, 'data products', dataProductByCategory);
+      helpers.response(res, 'success', 200, 'data products', productByCategory);
     }
   } catch (error) {
     next(error);
