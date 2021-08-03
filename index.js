@@ -8,6 +8,7 @@ import productRouter from './src/routes/products.js';
 import categoryRouter from './src/routes/category.js';
 import ordersRouter from './src/routes/Orders.js';
 import colorsRouter from './src/routes/colors.js';
+import storesRouter from './src/routes/stores.js';
 import helpers from './src/helpers/helpers.js';
 
 const app = express();
@@ -21,6 +22,7 @@ app.use('/products', productRouter);
 app.use('/categories', categoryRouter);
 app.use('/orders', ordersRouter);
 app.use('/colors', colorsRouter);
+app.use('/stores', storesRouter);
 app.use('*', (req, res, next) => {
   next(new Error('Endpoint Not Found'));
 });

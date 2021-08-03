@@ -178,9 +178,6 @@ const updateProduct = async (req, res, next) => {
         if (Array.isArray(req.body.colors)) {
           deleteColorProduct = recentColorProduct.filter((x) => !req.body.colors.includes(x));
           insertColorProduct = req.body.colors.filter((x) => !recentColorProduct.includes(x));
-        } else {
-          deleteColorProduct = recentColorProduct.filter((x) => ![parseInt(req.body.colors, 10)].includes(x));
-          insertColorProduct = [parseInt(req.body.colors, 10)].filter((x) => !recentColorProduct.includes(x));
         }
         if (deleteColorProduct.length > 0) {
           await colorProductModel.deleteColorProduct(deleteColorProduct, req.params.id);
@@ -193,9 +190,6 @@ const updateProduct = async (req, res, next) => {
             fs.unlink(path.join(path.dirname(''), `/${img.img_product}`));
           });
           await imgProductsModel.deleteImgProduct(req.body.old_img_product, req.params.id);
-        } else if (!Array.isArray(req.body.old_img_product) && req.body.old_img_product) {
-          fs.unlink(path.join(path.dirname(''), `/${checkExistImgProducts[0].img_product}`));
-          await imgProductsModel.deleteImgProduct([req.body.old_img_product], req.params.id);
         }
         const imgProduct = [];
         if (Array.isArray(req.body.img_product) && req.body.img_product) {

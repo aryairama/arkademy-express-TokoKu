@@ -141,7 +141,8 @@ const rulesCreateAndUpdate = () => [
     .withMessage('colors id must be number')
     .bail()
     .isInt({ min: 1 })
-    .withMessage('colors id must be more than 0'),
+    .withMessage('colors id must be more than 0')
+    .toArray(),
   body('colors.*')
     .isNumeric()
     .withMessage('colors id must be number')
@@ -201,7 +202,8 @@ const rulesUpdateOldImg = () => [
     .withMessage('old_img_product id must be number')
     .bail()
     .isInt({ min: 1 })
-    .withMessage('old_img_product id must be more than 0'),
+    .withMessage('old_img_product id must be more than 0')
+    .toArray(),
   body('old_img_product.*')
     .isNumeric()
     .withMessage('old_img_product id must be number')

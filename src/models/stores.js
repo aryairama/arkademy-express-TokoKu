@@ -18,8 +18,29 @@ const updateStore = (data, id) => new Promise((resolve, reject) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
   });
 });
+
+const storeProducts = (search, order, fieldOrder, storeId, start = '', limit = '') => new Promise((resolve, reject) => {
+  if (limit !== '' && start !== '') {
+    connection.query(
+      `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) AS img_product
+      FROM products WHERE (name LIKE "%${search}%" AND store_id = ${storeId}) ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
+      (error, result) => {
+        helpers.promiseResolveReject(resolve, reject, error, result);
+      },
+    );
+  } else {
+    connection.query(
+      `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) AS img_product
+      FROM products WHERE (name LIKE "%${search}%" AND store_id = ${storeId}) ORDER BY ${fieldOrder} ${order}`,
+      (error, result) => {
+        helpers.promiseResolveReject(resolve, reject, error, result);
+      },
+    );
+  }
+});
 export default {
   insertStore,
   checkExistStore,
   updateStore,
+  storeProducts,
 };
