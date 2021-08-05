@@ -113,6 +113,7 @@ const updateProfileStore = async (req, res, next) => {
     if (updateUser.affectedRows && updateStore.affectedRows) {
       const user = await usersModel.checkExistUser(req.userLogin.user_id, 'user_id');
       delete user[0].password;
+      user[0] = { ...user[0], store_id: store[0].store_id };
       helpers.response(res, 'success', 200, 'successfully updated profile store', user[0]);
     }
   } catch (error) {

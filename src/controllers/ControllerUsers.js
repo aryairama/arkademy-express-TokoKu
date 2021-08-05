@@ -127,6 +127,10 @@ const login = async (req, res, next) => {
           password, phone_number: phoneNumber, email, ...user
         } = checkExistUser[0];
         delete checkExistUser[0].password;
+        if (checkExistUser[0].roles === 'seller') {
+          const idStore = await storeModel.checkExistStore(user.user_id, 'user_id');
+          checkExistUser[0] = { ...checkExistUser[0], store_id: idStore[0].store_id };
+        }
         const accessToken = await genAccessToken(user, { expiresIn: 60 * 60 });
         const refreshToken = await genRefreshToken(user, { expiresIn: 60 * 60 * 2 });
         helpers.response(res, 'Success', 200, 'Login success', { ...checkExistUser[0], accessToken, refreshToken });
@@ -296,12 +300,14 @@ const updateUser = async (req, res, next) => {
             user_id: req.params.id,
           };
           if (checkExistStore.length === 0) {
-            await storeModel.insertStore(store);
+            const newStore = await storeModel.insertStore(store);
+            data = { ...data, store_id: newStore.insertId };
           } else if (checkExistStore.length > 0) {
             await storeModel.updateStore(store, checkExistStore[0].store_id);
+            data = { ...data, store_id: checkExistStore[0].store_id };
           }
         }
-        return helpers.response(res, 'success', 200, 'successfully updated user data', []);
+        return helpers.response(res, 'success', 200, 'successfully updated user data', data);
       }
     } else {
       return helpers.response(res, 'failed', 404, 'the data you want to update does not exist', []);
