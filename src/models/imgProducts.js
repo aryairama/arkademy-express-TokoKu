@@ -1,5 +1,5 @@
-import connection from '../configs/db.js';
-import helpers from '../helpers/helpers.js';
+const connection = require('../configs/db');
+const helpers = require('../helpers/helpers');
 
 const insertImgProduct = (data) => new Promise((resolve, reject) => {
   connection.query(
@@ -28,6 +28,7 @@ const getAllImgProduct = (id) => new Promise((resolve, reject) => {
     helpers.promiseResolveReject(resolve, reject, error, result);
   });
 });
-export default {
+
+module.exports = {
   insertImgProduct, deleteImgProduct, checkImgProduct, getAllImgProduct,
 };

@@ -1,12 +1,12 @@
-import {
+const {
   query, body, param, validationResult,
-} from 'express-validator';
-import fs from 'fs/promises';
-// import multer from 'multer';
-import path from 'path';
-import helpers from '../helpers/helpers.js';
-import userModel from '../models/users.js';
-// import multerConfig from '../configs/multer.js';
+} = require('express-validator');
+const fs = require('fs/promises');
+// const multer from 'multer';
+const path = require('path');
+const helpers = require('../helpers/helpers');
+const userModel = require('../models/users');
+// const multerConfig from '../configs/multer';
 
 const validateResult = (req, res, next) => {
   let error = validationResult(req);
@@ -327,4 +327,4 @@ const validate = (method) => {
   }
   return false;
 };
-export default validate;
+module.exports = validate;

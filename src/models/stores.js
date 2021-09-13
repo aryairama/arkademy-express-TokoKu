@@ -1,5 +1,5 @@
-import connection from '../configs/db.js';
-import helpers from '../helpers/helpers.js';
+const connection = require('../configs/db');
+const helpers = require('../helpers/helpers');
 
 const insertStore = (data) => new Promise((resolve, reject) => {
   connection.query('INSERT INTO stores set ?', data, (error, result) => {
@@ -38,7 +38,8 @@ const storeProducts = (search, order, fieldOrder, storeId, start = '', limit = '
     );
   }
 });
-export default {
+
+module.exports = {
   insertStore,
   checkExistStore,
   updateStore,

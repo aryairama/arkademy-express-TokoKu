@@ -1,8 +1,8 @@
-import express from 'express';
-import ControllerProduct from '../controllers/ControllerProducts.js';
-import ValidationProducts from '../validations/ValidationProducts.js';
-import { Auth, Role } from '../middlewares/Auth.js';
-import { hitCacheAllProduct, hitCacheProductDetail, hitCacheAllProductCategory } from '../middlewares/Redis.js';
+const express = require('express');
+const ControllerProduct = require('../controllers/ControllerProducts');
+const ValidationProducts = require('../validations/ValidationProducts');
+const { Auth, Role } = require('../middlewares/Auth');
+const { hitCacheAllProduct, hitCacheProductDetail, hitCacheAllProductCategory } = require('../middlewares/Redis');
 
 const router = express.Router();
 router
@@ -13,4 +13,4 @@ router
   .put('/:id', Auth, Role('seller'), ValidationProducts('update'), ControllerProduct.updateProduct)
   .delete('/:id', Auth, Role('seller'), ValidationProducts('delete'), ControllerProduct.deleteProduct);
 
-export default router;
+module.exports = router;

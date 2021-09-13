@@ -1,6 +1,6 @@
-import {
+const {
   query, body, param, validationResult,
-} from 'express-validator';
+} = require('express-validator');
 
 const validateResult = (req, res, next) => {
   const error = validationResult(req);
@@ -119,4 +119,4 @@ const validate = (method) => {
   return false;
 };
 
-export default validate;
+module.exports = validate;

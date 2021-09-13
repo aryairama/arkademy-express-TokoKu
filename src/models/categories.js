@@ -1,5 +1,5 @@
-import connection from '../configs/db.js';
-import helpers from '../helpers/helpers.js';
+const connection = require('../configs/db');
+const helpers = require('../helpers/helpers');
 
 const readProduct = (search, order, fieldOrder, start = '', limit = '') => new Promise((resolve, reject) => {
   if (limit !== '' && start !== '') {
@@ -64,7 +64,7 @@ const viewCategoryDetail = (id) => new Promise((resolve, reject) => {
   });
 });
 
-export default {
+module.exports = {
   readProduct,
   insertCategory,
   updateCategory,

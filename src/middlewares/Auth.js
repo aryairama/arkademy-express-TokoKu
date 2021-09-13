@@ -1,21 +1,21 @@
-import Jwt from 'jsonwebtoken';
-import helpers from '../helpers/helpers.js';
+const Jwt = require('jsonwebtoken');
+const { responseError } = require('../helpers/helpers');
 
-export const Auth = (req, res, next) => {
+const Auth = (req, res, next) => {
   try {
     const accessToken = req.headers.authorization;
     if (!accessToken) {
-      return helpers.responseError(res, 'Authorized failed', 401, 'Server need accessToken', []);
+      return responseError(res, 'Authorized failed', 401, 'Server need accessToken', []);
     }
     const token = accessToken.split(' ')[1];
     Jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
       if (err) {
         if (err.name === 'TokenExpiredError') {
-          return helpers.responseError(res, 'Authorized failed', 401, 'token expired', []);
+          return responseError(res, 'Authorized failed', 401, 'token expired', []);
         } if (err.name === 'JsonWebTokenError') {
-          return helpers.responseError(res, 'Authorized failed', 401, 'token invalid', []);
+          return responseError(res, 'Authorized failed', 401, 'token invalid', []);
         }
-        return helpers.responseError(res, 'Authorized failed', 401, 'token not active', []);
+        return responseError(res, 'Authorized failed', 401, 'token not active', []);
       }
       req.userLogin = decode;
       next();
@@ -25,7 +25,7 @@ export const Auth = (req, res, next) => {
   }
 };
 
-export const Role = (...roles) => (req, res, next) => {
+const Role = (...roles) => (req, res, next) => {
   let accesDenied = 0;
   for (let i = 0; i < roles.length; i += 1) {
     if (req.userLogin.roles !== roles[i]) {
@@ -38,6 +38,10 @@ export const Role = (...roles) => (req, res, next) => {
   if (accesDenied === 0) {
     next();
   } else if (accesDenied > 0) {
-    helpers.responseError(res, 'Access Denied', 403, 'You do not have permission for this service', []);
+    responseError(res, 'Access Denied', 403, 'You do not have permission for this service', []);
   }
+};
+
+module.exports = {
+  Auth, Role,
 };

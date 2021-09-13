@@ -1,8 +1,8 @@
-/* eslint-disable import/prefer-default-export */
-import Jwt from 'jsonwebtoken';
-import { redis } from '../middlewares/Redis.js';
+/* eslint-disable const/prefer-default-*/
+const Jwt = require('jsonwebtoken');
+const { redis } = require('../middlewares/Redis');
 
-export const genAccessToken = (payload, option) => new Promise((resolve, reject) => {
+const genAccessToken = (payload, option) => new Promise((resolve, reject) => {
   Jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { ...option }, (err, token) => {
     if (err) {
       console.log(err);
@@ -12,7 +12,7 @@ export const genAccessToken = (payload, option) => new Promise((resolve, reject)
   });
 });
 
-export const genRefreshToken = (payload, option) => new Promise((resolve, reject) => {
+const genRefreshToken = (payload, option) => new Promise((resolve, reject) => {
   Jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { ...option }, (err, token) => {
     if (err) {
       console.log(err);
@@ -23,7 +23,7 @@ export const genRefreshToken = (payload, option) => new Promise((resolve, reject
   });
 });
 
-export const genVerifEmailToken = (payload, option) => new Promise((resolve, reject) => {
+const genVerifEmailToken = (payload, option) => new Promise((resolve, reject) => {
   Jwt.sign(payload, process.env.VERIF_EMAIL_TOKEN_SECRET, { ...option }, (err, token) => {
     if (err) {
       console.log(err);
@@ -33,3 +33,5 @@ export const genVerifEmailToken = (payload, option) => new Promise((resolve, rej
     resolve(token);
   });
 });
+
+module.exports = { genAccessToken, genRefreshToken, genVerifEmailToken };

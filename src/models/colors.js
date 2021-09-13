@@ -1,5 +1,5 @@
-import connection from '../configs/db.js';
-import helpers from '../helpers/helpers.js';
+const connection = require('../configs/db');
+const helpers = require('../helpers/helpers');
 
 const checkExistColor = (fieldValue, field) => new Promise((resolve, reject) => {
   connection.query(`SELECT * FROM colors WHERE ${field} = ?`, fieldValue, (error, result) => {
@@ -38,7 +38,7 @@ const getAllColorProduct = (id) => new Promise((resolve, reject) => {
     },
   );
 });
-export default {
+module.exports = {
   checkExistColor,
   checkColors,
   getAllColorProduct,

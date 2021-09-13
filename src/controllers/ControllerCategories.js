@@ -1,8 +1,8 @@
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs/promises';
-import categoryModel from '../models/categories.js';
-import helpers from '../helpers/helpers.js';
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs/promises');
+const categoryModel = require('../models/categories');
+const helpers = require('../helpers/helpers');
 
 const readCategory = async (req, res, next) => {
   const StatusPagination = req.query.pagination || 'on';
@@ -151,6 +151,6 @@ const viewCategoryDetail = async (req, res, next) => {
   }
 };
 
-export default {
+module.exports = {
   readCategory, insertCategory, updateCategory, deleteCategory, viewCategoryDetail,
 };

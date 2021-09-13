@@ -1,7 +1,7 @@
-import express from 'express';
-import ControllerStores from '../controllers/ControllerStores.js';
-import ValidationStores from '../validations/ValidationStores.js';
-import { Auth, Role } from '../middlewares/Auth.js';
+const express = require('express');
+const ControllerStores = require('../controllers/ControllerStores');
+const ValidationStores = require('../validations/ValidationStores');
+const { Auth, Role } = require('../middlewares/Auth');
 
 const router = express.Router();
 router
@@ -9,4 +9,4 @@ router
   .get('/detail', Auth, Role('seller'), ControllerStores.viewDetailStore)
   .post('/update', Auth, Role('seller'), ValidationStores('update'), ControllerStores.updateProfileStore);
 
-export default router;
+module.exports = router;

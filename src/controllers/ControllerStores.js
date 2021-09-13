@@ -1,9 +1,9 @@
-import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import fs from 'fs/promises';
-import helpers from '../helpers/helpers.js';
-import storeModel from '../models/stores.js';
-import usersModel from '../models/users.js';
+const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const fs = require('fs/promises');
+const helpers = require('../helpers/helpers');
+const storeModel = require('../models/stores');
+const usersModel = require('../models/users');
 
 const storeProducts = async (req, res, next) => {
   const search = req.query.search || '';
@@ -121,7 +121,7 @@ const updateProfileStore = async (req, res, next) => {
   }
 };
 
-export default {
+module.exports = {
   storeProducts,
   viewDetailStore,
   updateProfileStore,

@@ -1,16 +1,16 @@
-import bcrypt from 'bcrypt';
-import path from 'path';
-import fs from 'fs/promises';
-import Jwt from 'jsonwebtoken';
-import { v4 as uuidv4 } from 'uuid';
-import { genAccessToken, genRefreshToken, genVerifEmailToken } from '../helpers/jwt.js';
-import helpers from '../helpers/helpers.js';
-import userModel from '../models/users.js';
-import storeModel from '../models/stores.js';
-import productModel from '../models/products.js';
-import orderModel from '../models/orderProducts.js';
-import imgProductsModel from '../models/imgProducts.js';
-import { redis } from '../middlewares/Redis.js';
+const bcrypt = require('bcrypt');
+const path = require('path');
+const fs = require('fs/promises');
+const Jwt = require('jsonwebtoken');
+const { v4: uuidv4 } = require('uuid');
+const { genAccessToken, genRefreshToken, genVerifEmailToken } = require('../helpers/jwt');
+const helpers = require('../helpers/helpers');
+const userModel = require('../models/users');
+const storeModel = require('../models/stores');
+const productModel = require('../models/products');
+const orderModel = require('../models/orderProducts');
+const imgProductsModel = require('../models/imgProducts');
+const { redis } = require('../middlewares/Redis');
 
 const readUser = async (req, res, next) => {
   const search = req.query.search || '';
@@ -321,8 +321,8 @@ const deleteUser = async (req, res, next) => {
   try {
     const getDataUser = await userModel.checkExistUser(req.params.id, 'user_id');
     if (Object.keys(getDataUser).length > 0 && getDataUser[0].status !== 'deleted') {
-      const checkRealtionUserOrder = await userModel.checkRealtionUserOrder(req.params.id);// cek punya order
-      const checkExistStore = await storeModel.checkExistStore(req.params.id, 'user_id');// cek punya store
+      const checkRealtionUserOrder = await userModel.checkRealtionUserOrder(req.params.id); // cek punya order
+      const checkExistStore = await storeModel.checkExistStore(req.params.id, 'user_id'); // cek punya store
       let orderNotFinished = 0;
       let orderProductStore = 0;
       let haveOrder = 0;
@@ -344,7 +344,9 @@ const deleteUser = async (req, res, next) => {
         const getAllProductsId = await productModel.checkExistProduct(checkExistStore[0].store_id, 'store_id'); // get semua produk toko tersebut
         const productsId = [];
         getAllProductsId.forEach((value) => productsId.push(value.product_id));
-        const checkExistProductOnOrderDetails = await orderModel.checkExistProductOnOrderDetails(productsId.length === 0 ? '' : productsId);
+        const checkExistProductOnOrderDetails = await orderModel.checkExistProductOnOrderDetails(
+          productsId.length === 0 ? '' : productsId,
+        );
         if (checkExistProductOnOrderDetails.length > 0) {
           haveOrderStore = checkExistProductOnOrderDetails.length;
           checkExistProductOnOrderDetails.forEach((orderStore) => {
@@ -360,12 +362,29 @@ const deleteUser = async (req, res, next) => {
         }
       }
       if (orderNotFinished > 0 && orderProductStore > 0) {
-        helpers.responseError(res, 'Failed', 409,
-          'the account cannot be deleted, there are orders in your shop and your orders that have not been completed', []);
+        helpers.responseError(
+          res,
+          'Failed',
+          409,
+          'the account cannot be deleted, there are orders in your shop and your orders that have not been completed',
+          [],
+        );
       } else if (orderNotFinished > 0) {
-        helpers.responseError(res, 'Failed', 409, 'the account cannot be deleted, there are orders that have not been completed', []);
+        helpers.responseError(
+          res,
+          'Failed',
+          409,
+          'the account cannot be deleted, there are orders that have not been completed',
+          [],
+        );
       } else if (orderProductStore > 0) {
-        helpers.responseError(res, 'Failed', 409, 'the account cannot be deleted, there are orders in your store that have not been completed', []);
+        helpers.responseError(
+          res,
+          'Failed',
+          409,
+          'the account cannot be deleted, there are orders in your store that have not been completed',
+          [],
+        );
       } else if (haveOrder > 0 && haveOrderStore > 0 && orderNotFinished === 0 && orderProductStore === 0) {
         const changeDataUser = await userModel.updateUser({ status: 'deleted' }, req.params.id);
         const changeDataStore = await storeModel.updateStore({ status: 'deleted' }, checkExistStore[0].store_id);
@@ -437,7 +456,7 @@ const verifregisteremail = (req, res, next) => {
   }
 };
 
-export default {
+module.exports = {
   insertUser,
   readUser,
   updateUser,

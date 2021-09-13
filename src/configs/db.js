@@ -1,4 +1,4 @@
-import mysql from 'mysql2';
+const mysql = require('mysql2');
 
 const connection = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -8,4 +8,4 @@ const connection = mysql.createConnection({
   multipleStatements: true,
 });
 
-export default connection;
+module.exports = connection;

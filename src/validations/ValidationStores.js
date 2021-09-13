@@ -1,5 +1,5 @@
-import { query, body, validationResult } from 'express-validator';
-import userModel from '../models/users.js';
+const { query, body, validationResult } = require('express-validator');
+const userModel = require('../models/users');
 
 const validateResult = (req, res, next) => {
   const error = validationResult(req);
@@ -110,4 +110,4 @@ const validate = (method) => {
   return false;
 };
 
-export default validate;
+module.exports = validate;

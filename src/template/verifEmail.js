@@ -64,7 +64,7 @@ const verifEmail = (token, name) => `
             display: inline-block;
             background-color: #3097d1;
             padding: 10px;
-            color: #ffffff !important;
+            color: #ffffff !constant;
             border-radius: 10px;
         }
 
@@ -98,4 +98,4 @@ const verifEmail = (token, name) => `
 
 </html>`;
 
-export default verifEmail;
+module.exports = verifEmail;

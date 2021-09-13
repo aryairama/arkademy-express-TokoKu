@@ -2,7 +2,6 @@
   "name": "ecommerce",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "main": "index.js",
   "scripts": {
     "serve": "nodemon index.js",
@@ -27,9 +26,9 @@
     "uuid": "^8.3.2"
   },
   "devDependencies": {
-    "eslint": "^7.30.0",
+    "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-import": "^2.24.2",
     "nodemon": "^2.0.9"
   }
 }

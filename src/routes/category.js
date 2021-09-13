@@ -1,6 +1,6 @@
-import express from 'express';
-import ControllerCategories from '../controllers/ControllerCategories.js';
-import ValidationCategories from '../validations/ValidationCategories.js';
+const express = require('express');
+const ControllerCategories = require('../controllers/ControllerCategories');
+const ValidationCategories = require('../validations/ValidationCategories');
 
 const router = express.Router();
 router
@@ -9,4 +9,5 @@ router
   .get('/:id', ValidationCategories('delete'), ControllerCategories.viewCategoryDetail)
   .put('/:id', ValidationCategories('update'), ControllerCategories.updateCategory)
   .delete('/:id', ValidationCategories('delete'), ControllerCategories.deleteCategory);
-export default router;
+
+module.exports = router;

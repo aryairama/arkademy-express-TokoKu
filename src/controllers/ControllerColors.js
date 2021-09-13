@@ -1,5 +1,5 @@
-import helpers from '../helpers/helpers.js';
-import colorModel from '../models/colors.js';
+const helpers = require('../helpers/helpers');
+const colorModel = require('../models/colors');
 
 const readColor = async (req, res, next) => {
   const StatusPagination = req.query.pagination || 'on';
@@ -64,6 +64,6 @@ const readColor = async (req, res, next) => {
   }
 };
 
-export default {
+module.exports = {
   readColor,
 };

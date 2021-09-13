@@ -1,5 +1,5 @@
-import mailer from '../configs/nodemailer.js';
-import templateVerifEmail from '../template/verifEmail.js';
+const mailer = require('../configs/nodemailer');
+const templateVerifEmail = require('../template/verifEmail');
 
 const response = (res, status, statusCode, message, data) => {
   res.status(statusCode).json({
@@ -45,7 +45,7 @@ const sendVerifEmailRegister = async (token, emailTo, name) => {
   });
 };
 
-export default {
+module.exports = {
   response,
   responseError,
   promiseResolveReject,

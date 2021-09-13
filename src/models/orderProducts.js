@@ -1,6 +1,6 @@
-import mysql from 'mysql2';
-import connection from '../configs/db.js';
-import helpers from '../helpers/helpers.js';
+const mysql = require('mysql2');
+const connection = require('../configs/db');
+const helpers = require('../helpers/helpers');
 
 const checkProducts = (id) => new Promise((resolve, reject) => {
   connection.query(
@@ -111,7 +111,7 @@ const checkExistProductOnOrderDetails = (id) => new Promise((resolve, reject) =>
   });
 });
 
-export default {
+module.exports = {
   checkProducts,
   insertOrder,
   insertOrderDetails,

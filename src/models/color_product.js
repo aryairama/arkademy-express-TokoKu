@@ -1,5 +1,5 @@
-import connection from '../configs/db.js';
-import helpers from '../helpers/helpers.js';
+const connection = require('../configs/db');
+const helpers = require('../helpers/helpers');
 
 const insertColorProduct = (data, idProduct) => new Promise((resolve, reject) => {
   connection.query('INSERT INTO color_product (product_id, color_id) VALUES ?',
@@ -20,4 +20,4 @@ const getColorProduct = (fieldValue, field) => new Promise((resolve, reject) => 
   });
 });
 
-export default { insertColorProduct, getColorProduct, deleteColorProduct };
+module.exports = { insertColorProduct, getColorProduct, deleteColorProduct };

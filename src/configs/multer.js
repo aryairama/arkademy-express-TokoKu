@@ -1,6 +1,6 @@
-import { v4 as uuidv4 } from 'uuid';
-import multer from 'multer';
-import path from 'path';
+const { v4: uuidv4 } = require('uuid');
+const multer = require('multer');
+const path = require('path');
 
 const userAvatarStorage = multer.diskStorage({
   destination: (req, file, next) => {
@@ -25,4 +25,4 @@ const multerUserAvatar = multer({
 });
 const uploudUserAvatar = multerUserAvatar.single('avatar');
 
-export default { uploudUserAvatar };
+module.exports = uploudUserAvatar;

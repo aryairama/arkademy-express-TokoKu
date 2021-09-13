@@ -1,5 +1,5 @@
-import connection from '../configs/db.js';
-import helpers from '../helpers/helpers.js';
+const connection = require('../configs/db');
+const helpers = require('../helpers/helpers');
 
 const readUser = (search, order, fieldOrder, start = '', limit = '') => new Promise((resolve, reject) => {
   if (limit !== '' && start !== '') {
@@ -61,7 +61,7 @@ const userStatus = (email, status) => new Promise((resolve, reject) => {
   });
 });
 
-export default {
+module.exports = {
   insertUser,
   readUser,
   deleteUser,

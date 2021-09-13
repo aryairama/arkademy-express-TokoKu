@@ -1,9 +1,9 @@
-import express from 'express';
-import ControllerColors from '../controllers/ControllerColors.js';
-import ValidationColors from '../validations/ValidationColors.js';
+const express = require('express');
+const ControllerColors = require('../controllers/ControllerColors');
+const ValidationColors = require('../validations/ValidationColors');
 
 const router = express.Router();
 
 router.get('/', ValidationColors('read'), ControllerColors.readColor);
 
-export default router;
+module.exports = router;

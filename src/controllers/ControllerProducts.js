@@ -1,13 +1,13 @@
-import path from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import fs from 'fs/promises';
-import productModel from '../models/products.js';
-import storeModel from '../models/stores.js';
-import colorModel from '../models/colors.js';
-import colorProductModel from '../models/color_product.js';
-import imgProductsModel from '../models/imgProducts.js';
-import helpers from '../helpers/helpers.js';
-import { redis, clearRedisCache } from '../middlewares/Redis.js';
+const path = require('path');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs/promises');
+const productModel = require('../models/products');
+const storeModel = require('../models/stores');
+const colorModel = require('../models/colors');
+const colorProductModel = require('../models/color_product');
+const imgProductsModel = require('../models/imgProducts');
+const helpers = require('../helpers/helpers');
+const { redis, clearRedisCache } = require('../middlewares/Redis');
 
 const readProduct = async (req, res, next) => {
   const search = req.query.search || '';
@@ -160,15 +160,26 @@ const updateProduct = async (req, res, next) => {
       };
       const checkColors = await colorModel.checkColors(req.body.colors);
       const checkCategoryId = Object.keys(await productModel.checkExistCategory(data.category_id)).length;
-      const checkExistProductRelatedStore = await productModel.checkExistProductRelatedStore(req.params.id, dataStore[0].store_id);
-      if (checkColors.length === req.body.colors.length && checkCategoryId > 0 && checkExistProductRelatedStore.length > 0) {
+      const checkExistProductRelatedStore = await productModel.checkExistProductRelatedStore(
+        req.params.id,
+        dataStore[0].store_id,
+      );
+      if (
+        checkColors.length === req.body.colors.length
+        && checkCategoryId > 0
+        && checkExistProductRelatedStore.length > 0
+      ) {
         const dataColorProduct = await colorProductModel.getColorProduct(req.params.id, 'product_id');
         const checkExistImgProducts = await imgProductsModel.checkImgProduct(req.body.old_img_product, req.params.id);
         const dataImgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
         if (req.body.old_img_product && checkExistImgProducts.length !== req.body.old_img_product.length) {
           return helpers.responseError(res, 'Wrong data', 404, 'The data entered is not correct', []);
         }
-        if (!req.body.img_product && req.body.old_img_product && dataImgProduct.length === req.body.old_img_product.length) {
+        if (
+          !req.body.img_product
+          && req.body.old_img_product
+          && dataImgProduct.length === req.body.old_img_product.length
+        ) {
           return helpers.responseError(res, 'Wrong action', 403, 'All product images cannot be deleted', []);
         }
         const recentColorProduct = [];
@@ -235,7 +246,10 @@ const deleteProduct = async (req, res, next) => {
     if (req.userLogin.roles === 'seller') {
       const dataStore = await storeModel.checkExistStore(req.userLogin.user_id, 'user_id');
       const checkRealtion = await productModel.checkRealtionOrderDetailsProduct(req.params.id);
-      const checkExistProductRelatedStore = await productModel.checkExistProductRelatedStore(req.params.id, dataStore[0].store_id);
+      const checkExistProductRelatedStore = await productModel.checkExistProductRelatedStore(
+        req.params.id,
+        dataStore[0].store_id,
+      );
       if (checkExistProductRelatedStore.length > 0) {
         if (checkRealtion.length === 0) {
           const dataImgProduct = await imgProductsModel.getAllImgProduct(req.params.id);
@@ -251,7 +265,11 @@ const deleteProduct = async (req, res, next) => {
           }
         } else if (checkRealtion.length > 0) {
           helpers.response(
-            res, 'data relation', 409, 'product data cannot be deleted because it is related to other data', [],
+            res,
+            'data relation',
+            409,
+            'product data cannot be deleted because it is related to other data',
+            [],
           );
         }
       } else {
@@ -328,7 +346,7 @@ const readProductCategory = async (req, res, next) => {
   }
 };
 
-export default {
+module.exports = {
   readProduct,
   insertProduct,
   updateProduct,
