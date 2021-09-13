@@ -20,11 +20,12 @@ const insertOrder = (data) => new Promise((resolve, reject) => {
 
 const insertOrderDetails = (data) => new Promise((resolve, reject) => {
   connection.query(
-    'INSERT INTO order_details (product_id, order_id, quantity, price, created_at, updated_at) VALUES ?',
+    'INSERT INTO order_details (product_id, order_id, color_id, quantity, price, created_at, updated_at) VALUES ?',
     [
       data.map((value) => [
         value.product_id,
         value.order_id,
+        value.color_id,
         value.quantity,
         value.price,
         value.created_at,

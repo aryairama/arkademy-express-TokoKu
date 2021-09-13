@@ -1,79 +1,73 @@
 const { v4: uuidv4 } = require('uuid');
 const helpers = require('../helpers/helpers');
 const ordersModel = require('../models/orderProducts');
-const usersModel = require('../models/users');
+const { clearRedisCache } = require('../middlewares/Redis');
 
 const insertOrder = async (req, res, next) => {
   try {
-    const quantityProductOrder = [];
-    req.body.order.forEach((order) => {
-      let addFirst = true;
-      if (quantityProductOrder.length > 0) {
-        quantityProductOrder.forEach((productOrder) => {
-          if (productOrder.product_id === order.product_id) {
-            addFirst = false;
-            productOrder.quantity += order.quantity;
-          } else if (!(productOrder.product_id === order.product_id)) {
-            quantityProductOrder.push({ product_id: order.product_id, quantity: order.quantity });
-          }
-        });
-      } else if (addFirst) {
-        quantityProductOrder.push({ product_id: order.product_id, quantity: order.quantity });
+    const productId = [];
+    let combineCartOrders = req.body.order.slice(0);
+    combineCartOrders = combineCartOrders.reduce((accumulator, cur) => {
+      const found = accumulator.find((elem) => elem.product_id === cur.product_id);
+      if (found) {
+        found.quantity += cur.quantity;
+        found.prices += cur.prices;
+      } else {
+        accumulator.push({ ...cur });
       }
-    });
-    res.json(quantityProductOrder);
+      return accumulator;
+    }, []);
+    combineCartOrders.forEach((cartOrder) => productId.push(cartOrder.product_id));
     let error = 0;
-    const checkUser = await usersModel.checkExistUser(req.body.user_id, 'user_id');
-    const getDataProducts = await ordersModel.checkProducts(req.body.product_id);
-    // if (req.body.product_id.length === getDataProducts.length
-    // && req.body.product_id.length === req.body.quantity.length
-    // && checkUser.length > 0) {
-    //   req.body.quantity.forEach((value, index) => {
-    //     if (value > getDataProducts[index].quantity) {
-    //       error += 1;
-    //     }
-    //   });
-    //   if (error === 0) {
-    //     const updateQuantityProducts = [];
-    //     const orderDetails = [];
-    //     let totalPrice = 0;
-    //     getDataProducts.forEach((value, index) => {
-    //       totalPrice += value.price * req.body.quantity[index];
-    //       orderDetails.push({
-    //         product_id: value.product_id,
-    //         order_id: null,
-    //         quantity: req.body.quantity[index],
-    //         price: value.price * req.body.quantity[index],
-    //         created_at: new Date(),
-    //         updated_at: new Date(),
-    //       });
-    //       updateQuantityProducts.push(value.quantity - req.body.quantity[index]);
-    //     });
-    //     const Orders = {
-    //       user_id: req.body.user_id,
-    //       invoice_number: uuidv4(),
-    //       total_price: totalPrice,
-    //       status: 'submit',
-    //       created_at: new Date(),
-    //       updated_at: new Date(),
-    //     };
-    //     const addDataOrder = await ordersModel.insertOrder(Orders);
-    //     orderDetails.forEach((orderDetail) => {
-    //       orderDetail.order_id = addDataOrder.insertId;
-    //     });
-    //     const addDataOrderDetail = await ordersModel.insertOrderDetails(orderDetails);
-    //     const updateDataProducts = await ordersModel.updateProducts(updateQuantityProducts, req.body.product_id);
-    //     const updateDataProductsAffectedRows = updateQuantityProducts.length > 1
-    //       ? updateDataProducts[0].affectedRows : updateDataProducts.affectedRows;
-    //     if (addDataOrder.affectedRows && addDataOrderDetail.affectedRows && updateDataProductsAffectedRows) {
-    //       helpers.response(res, 'success', 200, 'successfully added order data', []);
-    //     }
-    //   } else {
-    //     helpers.response(res, 'failed', 422, 'the number of products purchased does not match', []);
-    //   }
-    // } else {
-    //   helpers.response(res, 'failed', 404, 'data not match', []);
-    // }
+    const updateQuantityProducts = [];
+    const getDataProducts = await ordersModel.checkProducts(productId);
+    if (productId.length === getDataProducts.length) {
+      combineCartOrders.forEach((value, index) => {
+        updateQuantityProducts.push(getDataProducts[index].quantity - value.quantity);
+        if (value > getDataProducts[index].quantity) {
+          error += 1;
+        }
+      });
+      if (error === 0) {
+        const orderDetails = [];
+        req.body.order.forEach((value) => {
+          orderDetails.push({
+            product_id: value.product_id,
+            order_id: null,
+            color_id: value.color_id,
+            quantity: value.quantity,
+            price: value.prices,
+            created_at: new Date(),
+            updated_at: new Date(),
+          });
+        });
+        const Orders = {
+          user_id: req.userLogin.user_id,
+          invoice_number: uuidv4(),
+          total_price: req.body.total,
+          payment: req.body.payment,
+          status: 'submit',
+          created_at: new Date(),
+          updated_at: new Date(),
+        };
+        const addDataOrder = await ordersModel.insertOrder(Orders);
+        orderDetails.forEach((orderDetail) => {
+          orderDetail.order_id = addDataOrder.insertId;
+        });
+        const addDataOrderDetail = await ordersModel.insertOrderDetails(orderDetails);
+        const updateDataProducts = await ordersModel.updateProducts(updateQuantityProducts, productId);
+        const updateDataProductsAffectedRows = updateQuantityProducts.length > 1
+          ? updateDataProducts[0].affectedRows : updateDataProducts.affectedRows;
+        if (addDataOrder.affectedRows && addDataOrderDetail.affectedRows && updateDataProductsAffectedRows) {
+          helpers.response(res, 'success', 200, 'successfully added order data', []);
+          productId.forEach((value) => clearRedisCache(`viewProductDetail/${value}`));
+        }
+      } else if (error > 0) {
+        helpers.response(res, 'failed', 422, 'the number of products purchased does not match', []);
+      }
+    } else {
+      helpers.response(res, 'failed', 404, 'data not match', []);
+    }
   } catch (error) {
     next(error);
   }
