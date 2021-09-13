@@ -18,7 +18,7 @@ const verifEmail = (token, name) => `
             background-color: #f5f8fa;
             box-sizing: border-box;
         }
-        
+
         .footer {
             height: 15vh;
             background-color: #f5f8fa;
@@ -64,7 +64,7 @@ const verifEmail = (token, name) => `
             display: inline-block;
             background-color: #3097d1;
             padding: 10px;
-            color: #ffffff !constant;
+            color: #ffffff !important;
             border-radius: 10px;
         }
 
@@ -76,23 +76,23 @@ const verifEmail = (token, name) => `
 
 <body>
     <div class="header">
-    <center>
-        <p>TokoKu</p>
-    </center>
+        <center>
+            <p>TokoKu</p>
+        </center>
     </div>
     <div class="box-email">
         <p class="font-size19px margin-top20px font-wigthBold">Hello ${name}!</p>
         <p class="font-size16px margin-top20px">Please click the button below to verify your email address.</p>
         <a target="_blank" href="${process.env.URL_FRONTEND}/verifemailregister?veriftoken=${token}"
-        class="button-verif margin-top20px">Verify Email Address</a>
+            class="button-verif margin-top20px">Verify Email Address</a>
         <p class="font-size16px margin-top20px">If you did not create an account, no further action is required.</p>
         <p class="font-size16px margin-top20px">Regards,</p>
         <p class="font-size16px">TokoKu</p>
     </div>
     <div class="footer margin-top20px">
-    <center>
-        <p>© 2021 TokoKu. All rights reserved.</p>
-    </center>
+        <center>
+            <p>© 2021 TokoKu. All rights reserved.</p>
+        </center>
     </div>
 </body>
 
