@@ -1,12 +1,20 @@
 const Redis = require('ioredis');
 const { response, responsePagination } = require('../helpers/helpers');
 
-const redis = new Redis({
-  port: process.env.PORT_REDIS,
-  host: process.env.HOST_REDIS,
-  password: process.env.AUTH_REDIS,
-  db: 0,
-});
+let redis;
+if (process.env.REDIS_OPTION === 'ip') {
+  redis = new Redis({
+    port: process.env.PORT_REDIS,
+    host: process.env.HOST_REDIS,
+    password: process.env.AUTH_REDIS,
+    db: 0,
+  });
+} else if (process.env.REDIS_OPTION === 'SOCKET') {
+  redis = new Redis({
+    path: process.env.PATH_REDIS,
+    db: 0,
+  });
+}
 
 const hitCacheAllProduct = (req, res, next) => {
   const search = req.query.search || '';
