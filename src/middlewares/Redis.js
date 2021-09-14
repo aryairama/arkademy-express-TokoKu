@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const Redis = require('ioredis');
 const { response, responsePagination } = require('../helpers/helpers');
 
@@ -77,8 +78,8 @@ const hitCacheAllProductCategory = (req, res, next) => {
 const clearRedisCache = (...patterns) => {
   patterns.forEach((pattern) => {
     redis.keys(pattern, (error, result) => {
-      result.forEach((redisCache) => {
-        redis.del(redisCache);
+      redis.del(result, (err, res) => {
+        console.log('delete redis');
       });
     });
   });

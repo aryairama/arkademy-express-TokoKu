@@ -5,7 +5,7 @@ const readProduct = (search, order, fieldOrder, start = '', limit = '') => new P
   if (limit !== '' && start !== '') {
     connection.query(
       `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) AS img_product
-      FROM products WHERE name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
+      FROM products WHERE (name LIKE "%${search}%") AND (quantity > 0) ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
       (error, result) => {
         helpers.promiseResolveReject(resolve, reject, error, result);
       },
@@ -13,7 +13,7 @@ const readProduct = (search, order, fieldOrder, start = '', limit = '') => new P
   } else {
     connection.query(
       `SELECT *,(SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) AS img_product
-      FROM products WHERE name LIKE "%${search}%" ORDER BY ${fieldOrder} ${order}`,
+      FROM products WHERE (name LIKE "%${search}%") AND (quantity > 0) ORDER BY ${fieldOrder} ${order}`,
       (error, result) => {
         helpers.promiseResolveReject(resolve, reject, error, result);
       },
