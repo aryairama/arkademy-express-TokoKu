@@ -114,6 +114,7 @@ const viewOrderDetail = async (req, res, next) => {
 };
 
 const readOrder = async (req, res, next) => {
+  const status = req.query.status || '';
   const search = req.query.search || '';
   let order = req.query.order || '';
   let fieldOrder = req.query.fieldOrder || '';
@@ -132,7 +133,7 @@ const readOrder = async (req, res, next) => {
   try {
     let dataOrders;
     let pagination;
-    const lengthRecord = Object.keys(await ordersModel.readOrder(search, order, fieldOrder)).length;
+    const lengthRecord = Object.keys(await ordersModel.readOrder(req.userLogin.user_id, status, search, order, fieldOrder)).length;
     if (lengthRecord > 0) {
       const limit = req.query.limit || 5;
       const pages = Math.ceil(lengthRecord / limit);
@@ -159,10 +160,10 @@ const readOrder = async (req, res, next) => {
         nextPage,
         prevPage,
       };
-      dataOrders = await ordersModel.readOrder(search, order, fieldOrder, start, limit);
+      dataOrders = await ordersModel.readOrder(req.userLogin.user_id, status, search, order, fieldOrder, start, limit);
       helpers.responsePagination(res, 'success', 200, 'data categories', dataOrders, pagination);
     } else {
-      dataOrders = await ordersModel.readOrder(search, order, fieldOrder);
+      dataOrders = await ordersModel.readOrder(req.userLogin.user_id, status, search, order, fieldOrder);
       helpers.response(res, 'success', 200, 'data categories', dataOrders);
     }
   } catch (error) {

@@ -7,7 +7,7 @@ const router = express.Router();
 
 router
   .post('/', Auth, Role('seller', 'custommer'), ControllerOrders.insertOrder)
-  .get('/', valdationOrders('read'), ControllerOrders.readOrder)
+  .get('/', Auth, Role('seller', 'custommer'), valdationOrders('read'), ControllerOrders.readOrder)
   .patch('/:id', valdationOrders('update'), ControllerOrders.updateOrderStatus)
   .get('/detail/:id', valdationOrders('view'), ControllerOrders.viewOrderDetail);
 

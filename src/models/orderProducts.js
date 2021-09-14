@@ -84,11 +84,14 @@ const getOrderDetails = (id) => new Promise((resolve, reject) => {
   );
 });
 
-const readOrder = (search, order, fieldOrder, start = '', limit = '') => new Promise((resolve, reject) => {
+const readOrder = (userId, status, search, order, fieldOrder, start = '', limit = '') => new Promise((resolve, reject) => {
+  const extraQuery = status !== '' ? `AND orders.status = "${status}"` : '';
   if (limit !== '' && start !== '') {
     connection.query(
       `SELECT users.name, orders.* FROM orders INNER JOIN users ON orders.user_id = users.user_id
-      WHERE (users.name LIKE "%${search}%" OR orders.invoice_number LIKE "%${search}%") ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
+      WHERE (users.name LIKE "%${search}%" OR orders.invoice_number LIKE "%${search}%")
+      AND users.user_id = ${userId} ${extraQuery}
+      ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
       (error, result) => {
         helpers.promiseResolveReject(resolve, reject, error, result);
       },
@@ -96,7 +99,9 @@ const readOrder = (search, order, fieldOrder, start = '', limit = '') => new Pro
   } else {
     connection.query(
       `SELECT users.name, orders.* FROM orders INNER JOIN users ON orders.user_id = users.user_id
-      WHERE (users.name LIKE "%${search}%" OR orders.invoice_number LIKE "%${search}%") ORDER BY ${fieldOrder} ${order}`,
+      WHERE (users.name LIKE "%${search}%" OR orders.invoice_number LIKE "%${search}%")
+      AND users.user_id = ${userId} ${extraQuery}
+      ORDER BY ${fieldOrder} ${order}`,
       (error, result) => {
         helpers.promiseResolveReject(resolve, reject, error, result);
       },
