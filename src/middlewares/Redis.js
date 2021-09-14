@@ -85,6 +85,19 @@ const clearRedisCache = (...patterns) => {
   });
 };
 
+const clearRedisCacheV2 = (pattern) => {
+  redis.keys(pattern, (error, result) => {
+    redis.del(result, (err, res) => {
+      console.log('delete redis');
+    });
+  });
+};
+
 module.exports = {
-  redis, hitCacheAllProduct, hitCacheAllProductCategory, hitCacheProductDetail, clearRedisCache,
+  redis,
+  hitCacheAllProduct,
+  hitCacheAllProductCategory,
+  hitCacheProductDetail,
+  clearRedisCache,
+  clearRedisCacheV2,
 };

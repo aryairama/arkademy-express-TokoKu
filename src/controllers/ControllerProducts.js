@@ -7,7 +7,7 @@ const colorModel = require('../models/colors');
 const colorProductModel = require('../models/color_product');
 const imgProductsModel = require('../models/imgProducts');
 const helpers = require('../helpers/helpers');
-const { redis, clearRedisCache } = require('../middlewares/Redis');
+const { redis, clearRedisCacheV2 } = require('../middlewares/Redis');
 
 const readProduct = async (req, res, next) => {
   const search = req.query.search || '';
@@ -127,7 +127,9 @@ const insertProduct = async (req, res, next) => {
           }
           const addDataImgProduct = await imgProductsModel.insertImgProduct(imgProduct);
           if (addDataImgProduct.affectedRows) {
-            clearRedisCache('readProduct-*', 'readProductCategory/*');
+            // clearRedisCache('readProduct-*', 'readProductCategory/*');
+            clearRedisCacheV2('readProductCategory/*');
+            clearRedisCacheV2('readProduct-*');
             helpers.response(res, 'success', 200, 'successfully added product data', addDataProduct);
           }
         }
@@ -227,7 +229,10 @@ const updateProduct = async (req, res, next) => {
         }
         const changeDataProduct = await productModel.updateProduct(data, req.params.id);
         if (changeDataProduct.affectedRows) {
-          clearRedisCache(`viewProductDetail/${req.params.id}`, 'readProductCategory/*', 'readProduct-*');
+          // clearRedisCache(`viewProductDetail/${req.params.id}`, 'readProductCategory/*', 'readProduct-*');
+          clearRedisCacheV2(`viewProductDetail/${req.params.id}`);
+          clearRedisCacheV2('readProductCategory/*');
+          clearRedisCacheV2('readProduct-*');
           helpers.response(res, 'success', 200, 'successfully updated product data', []);
         }
       } else {
@@ -258,7 +263,10 @@ const deleteProduct = async (req, res, next) => {
             dataImgProduct.forEach((img) => {
               fs.unlink(path.join(path.dirname(''), `/${img.img_product}`));
             });
-            clearRedisCache(`viewProductDetail/${req.params.id}`, 'readProductCategory/*', 'readProduct-*');
+            // clearRedisCache(`viewProductDetail/${req.params.id}`, 'readProductCategory/*', 'readProduct-*');
+            clearRedisCacheV2(`viewProductDetail/${req.params.id}`);
+            clearRedisCacheV2('readProductCategory/*');
+            clearRedisCacheV2('readProduct-*');
             helpers.response(res, 'success', 200, 'successfully deleted product data', []);
           } else {
             helpers.response(res, 'failed', 404, 'the data you want to delete does not exist', []);
