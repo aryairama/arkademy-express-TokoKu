@@ -9,6 +9,7 @@ const categoryRouter = require('./src/routes/category');
 const ordersRouter = require('./src/routes/Orders');
 const colorsRouter = require('./src/routes/colors');
 const storesRouter = require('./src/routes/stores');
+const addressesRouter = require('./src/routes/addresses');
 const helpers = require('./src/helpers/helpers');
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/categories', categoryRouter);
 app.use('/orders', ordersRouter);
 app.use('/colors', colorsRouter);
 app.use('/stores', storesRouter);
+app.use('/addresses', addressesRouter);
 app.use('*', (req, res, next) => {
   next(new Error('Endpoint Not Found'));
 });
