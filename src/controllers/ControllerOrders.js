@@ -3,6 +3,7 @@
 const { v4: uuidv4 } = require('uuid');
 const helpers = require('../helpers/helpers');
 const ordersModel = require('../models/orderProducts');
+const storesModel = require('../models/stores');
 const { clearRedisCache, clearRedisCacheV2 } = require('../middlewares/Redis');
 
 const insertOrder = async (req, res, next) => {
@@ -204,9 +205,74 @@ const readOrder = async (req, res, next) => {
   }
 };
 
+const readOrderStore = async (req, res, next) => {
+  const status = req.query.status || '';
+  const search = req.query.search || '';
+  let order = req.query.order || '';
+  let fieldOrder = req.query.fieldOrder || '';
+  if (order.toUpperCase() === 'ASC') {
+    order = 'ASC';
+  } else if (order.toUpperCase() === 'DESC') {
+    order = 'DESC';
+  } else {
+    order = 'DESC';
+  }
+  if (fieldOrder.toLowerCase() === 'total_price') {
+    fieldOrder = 'total_price';
+  } else {
+    fieldOrder = 'order_id';
+  }
+  try {
+    const storeId = await storesModel.checkExistStore(req.userLogin.user_id, 'user_id');
+    if (storeId.length < 1) {
+      return helpers.response(res, 'success', 200, 'order store', []);
+    }
+    let dataOrders;
+    let pagination;
+    const lengthRecord = Object.keys(
+      await ordersModel.readOrderStore(storeId[0].store_id, status, search, order, fieldOrder),
+    ).length;
+    if (lengthRecord > 0) {
+      const limit = req.query.limit || 5;
+      const pages = Math.ceil(lengthRecord / limit);
+      let page = req.query.page || 1;
+      let nextPage = parseInt(page, 10) + 1;
+      let prevPage = parseInt(page, 10) - 1;
+      if (nextPage > pages) {
+        nextPage = pages;
+      }
+      if (prevPage < 1) {
+        prevPage = 1;
+      }
+      if (page > pages) {
+        page = pages;
+      } else if (page < 1) {
+        page = 1;
+      }
+      const start = (page - 1) * limit;
+      pagination = {
+        countData: lengthRecord,
+        pages,
+        limit: parseInt(limit, 10),
+        curentPage: parseInt(page, 10),
+        nextPage,
+        prevPage,
+      };
+      dataOrders = await ordersModel.readOrderStore(storeId[0].store_id, status, search, order, fieldOrder, start, limit);
+      helpers.responsePagination(res, 'success', 200, 'order store', dataOrders, pagination);
+    } else {
+      dataOrders = await ordersModel.readOrderStore(storeId[0].store_id, status, search, order, fieldOrder);
+      helpers.response(res, 'success', 200, 'order store', dataOrders);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   insertOrder,
   updateOrderStatus,
   viewOrderDetail,
   readOrder,
+  readOrderStore,
 };

@@ -114,6 +114,35 @@ const readOrder = (userId, status, search, order, fieldOrder, start = '', limit 
   }
 });
 
+const readOrderStore = (storeId, status, search, order, fieldOrder, start = '', limit = '') => new Promise((resolve, reject) => {
+  const extraQuery = status !== '' ? `AND orders.status = "${status}"` : '';
+  if (limit !== '' && start !== '') {
+    connection.query(
+      `SELECT users.name, orders.*
+      FROM orders INNER JOIN users ON orders.user_id = users.user_id
+      WHERE (users.name LIKE "%${search}%" OR orders.invoice_number LIKE "%${search}%")
+      AND (SELECT products.store_id FROM order_details INNER JOIN products ON products.product_id = order_details.product_id
+      WHERE order_details.order_id = orders.order_id LIMIT 1) = ${storeId} ${extraQuery}
+      ORDER BY ${fieldOrder} ${order} LIMIT ${start} , ${limit}`,
+      (error, result) => {
+        helpers.promiseResolveReject(resolve, reject, error, result);
+      },
+    );
+  } else {
+    connection.query(
+      `SELECT users.name, orders.*
+      FROM orders INNER JOIN users ON orders.user_id = users.user_id
+      WHERE (users.name LIKE "%${search}%" OR orders.invoice_number LIKE "%${search}%")
+      AND (SELECT products.store_id FROM order_details INNER JOIN products ON products.product_id = order_details.product_id
+      WHERE order_details.order_id = orders.order_id LIMIT 1) = ${storeId} ${extraQuery}
+      ORDER BY ${fieldOrder} ${order}`,
+      (error, result) => {
+        helpers.promiseResolveReject(resolve, reject, error, result);
+      },
+    );
+  }
+});
+
 const checkExistProductOnOrderDetails = (id) => new Promise((resolve, reject) => {
   connection.query(`SELECT orders.status,orders.user_id,order_details.*
   FROM order_details INNER JOIN orders ON order_details.order_id = orders.order_id
@@ -132,4 +161,5 @@ module.exports = {
   getUserOrder,
   readOrder,
   checkExistProductOnOrderDetails,
+  readOrderStore,
 };
