@@ -1,7 +1,9 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable max-len */
 const { v4: uuidv4 } = require('uuid');
 const helpers = require('../helpers/helpers');
 const ordersModel = require('../models/orderProducts');
-const { clearRedisCache } = require('../middlewares/Redis');
+const { clearRedisCache, clearRedisCacheV2 } = require('../middlewares/Redis');
 
 const insertOrder = async (req, res, next) => {
   try {
@@ -56,8 +58,7 @@ const insertOrder = async (req, res, next) => {
         });
         const addDataOrderDetail = await ordersModel.insertOrderDetails(orderDetails);
         const updateDataProducts = await ordersModel.updateProducts(updateQuantityProducts, productId);
-        const updateDataProductsAffectedRows = updateQuantityProducts.length > 1
-          ? updateDataProducts[0].affectedRows : updateDataProducts.affectedRows;
+        const updateDataProductsAffectedRows = updateQuantityProducts.length > 1 ? updateDataProducts[0].affectedRows : updateDataProducts.affectedRows;
         if (addDataOrder.affectedRows && addDataOrderDetail.affectedRows && updateDataProductsAffectedRows) {
           helpers.response(res, 'success', 200, 'successfully added order data', []);
           productId.forEach((value) => clearRedisCache(`viewProductDetail/${value}`));
@@ -79,11 +80,39 @@ const updateOrderStatus = async (req, res, next) => {
       status: req.body.status,
       updated_at: new Date(),
     };
-    const changeDataOrder = await ordersModel.updateOrder(data, req.params.id);
-    if (changeDataOrder.affectedRows) {
-      helpers.response(res, 'success', 200, 'successfully updated order status', []);
+    const checkExisOrder = await ordersModel.getUserOrder(req.params.id);
+    if (checkExisOrder.length > 0) {
+      if (req.body.status === 'cancel') {
+        let orderDetails = await ordersModel.getOrderDetails(req.params.id);
+        const productId = [];
+        const updateQuantityProducts = [];
+        orderDetails = orderDetails.reduce((accumulator, cur) => {
+          const found = accumulator.find((elem) => elem.product_id === cur.product_id);
+          if (found) {
+            found.quantity += cur.quantity;
+          } else {
+            accumulator.push({ ...cur });
+          }
+          return accumulator;
+        }, []);
+        orderDetails.forEach((cancelOrder) => productId.push(cancelOrder.product_id));
+        const getDataProducts = await ordersModel.checkProducts(productId);
+        orderDetails.forEach((value, index) => {
+          updateQuantityProducts.push(getDataProducts[index].quantity + value.quantity);
+        });
+        const updateDataProducts = await ordersModel.updateProducts(updateQuantityProducts, productId);
+        if (updateDataProducts.affectedRows) {
+          productId.forEach((value) => clearRedisCacheV2(`viewProductDetail/${value}`));
+        }
+      }
+      const changeDataOrder = await ordersModel.updateOrder(data, req.params.id);
+      if (changeDataOrder.affectedRows) {
+        helpers.response(res, 'success', 200, 'successfully updated order status', []);
+      } else {
+        helpers.response(res, 'failed', 404, 'the data you want to change does not exist', []);
+      }
     } else {
-      helpers.response(res, 'failed', 404, 'the data you want to change does not exist', []);
+      helpers.response(res, 'failed', 404, "The order id doesn't exist", []);
     }
   } catch (error) {
     next(error);
@@ -96,6 +125,8 @@ const viewOrderDetail = async (req, res, next) => {
     const orderDetails = await ordersModel.getOrderDetails(req.params.id);
     if (userOrder.length > 0 && orderDetails.length > 0) {
       res.json({
+        store_id: userOrder[0].store_id,
+        user_id: userOrder[0].user_id,
         name: userOrder[0].name,
         order_id: userOrder[0].order_id,
         invoice_number: userOrder[0].invoice_number,
@@ -133,7 +164,9 @@ const readOrder = async (req, res, next) => {
   try {
     let dataOrders;
     let pagination;
-    const lengthRecord = Object.keys(await ordersModel.readOrder(req.userLogin.user_id, status, search, order, fieldOrder)).length;
+    const lengthRecord = Object.keys(
+      await ordersModel.readOrder(req.userLogin.user_id, status, search, order, fieldOrder),
+    ).length;
     if (lengthRecord > 0) {
       const limit = req.query.limit || 5;
       const pages = Math.ceil(lengthRecord / limit);

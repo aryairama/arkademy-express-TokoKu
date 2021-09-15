@@ -63,7 +63,9 @@ const updateOrder = (data, id) => new Promise((resolve, reject) => {
 
 const getUserOrder = (id) => new Promise((resolve, reject) => {
   connection.query(
-    `SELECT users.name, orders.order_id,orders.invoice_number,orders.total_price,orders.status,orders.created_at
+    `SELECT (SELECT products.store_id FROM order_details INNER JOIN products on products.product_id = order_details.product_id
+    WHERE order_details.order_id = orders.order_id LIMIT 1) AS store_id,
+    users.name, orders.user_id, orders.order_id,orders.invoice_number,orders.total_price,orders.status,orders.created_at
     ,orders.updated_at FROM orders INNER JOIN users ON orders.user_id = users.user_id WHERE orders.order_id = ?`,
     id,
     (error, result) => {
@@ -74,9 +76,12 @@ const getUserOrder = (id) => new Promise((resolve, reject) => {
 
 const getOrderDetails = (id) => new Promise((resolve, reject) => {
   connection.query(
-    `SELECT products.name AS product_name,order_details.quantity,order_details.price
+    `SELECT colors.color_name, products.name AS product_name, order_details.quantity, order_details.price, order_details.product_id,
+    (SELECT img_product FROM img_products WHERE img_products.product_id = products.product_id LIMIT 1) AS img_product
     FROM order_details
-    INNER JOIN products ON order_details.product_id = products.product_id WHERE order_details.order_id = ?`,
+    INNER JOIN products ON order_details.product_id = products.product_id
+    INNER JOIN colors ON order_details.color_id =  colors.color_id
+    WHERE order_details.order_id = ?`,
     id,
     (error, result) => {
       helpers.promiseResolveReject(resolve, reject, error, result);
