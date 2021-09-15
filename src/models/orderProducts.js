@@ -65,7 +65,7 @@ const getUserOrder = (id) => new Promise((resolve, reject) => {
   connection.query(
     `SELECT (SELECT products.store_id FROM order_details INNER JOIN products on products.product_id = order_details.product_id
     WHERE order_details.order_id = orders.order_id LIMIT 1) AS store_id,
-    users.name, orders.user_id, orders.order_id,orders.invoice_number,orders.total_price,orders.status,orders.created_at
+    users.name, orders.user_id, orders.order_id,orders.invoice_number, orders.payment, orders.total_price,orders.status,orders.created_at
     ,orders.updated_at FROM orders INNER JOIN users ON orders.user_id = users.user_id WHERE orders.order_id = ?`,
     id,
     (error, result) => {

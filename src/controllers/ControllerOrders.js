@@ -131,6 +131,7 @@ const viewOrderDetail = async (req, res, next) => {
         name: userOrder[0].name,
         order_id: userOrder[0].order_id,
         invoice_number: userOrder[0].invoice_number,
+        payment: userOrder[0].payment,
         total_price: userOrder[0].total_price,
         status: userOrder[0].status,
         created_at: userOrder[0].created_at,
