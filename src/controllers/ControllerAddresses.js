@@ -135,8 +135,33 @@ const deleteAddress = async (req, res, next) => {
   }
 };
 
+const setPrimaryAddress = async (req, res, next) => {
+  try {
+    const checkExistAddress = await addressesModel.checkExistAddress(req.params.id, 'address_id');
+    if (checkExistAddress.length > 0) {
+      const addressId = [];
+      const dataAddresses = await addressesModel.checkExistPrimaryAddress(req.userLogin.user_id, 'user_id');
+      if (dataAddresses.length > 0) {
+        dataAddresses.forEach((address) => addressId.push(address.address_id));
+      }
+      const updateDataAddress = await addressesModel.updateAddress({ primary_address: 1 }, req.params.id);
+      if (updateDataAddress.affectedRows) {
+        if (addressId.length > 0) {
+          await addressesModel.batchUpdateSecondaryAddresses('0', addressId);
+        }
+        helpers.response(res, 'Success', 200, 'Successfully set primary address', {});
+      }
+    } else {
+      return helpers.response(res, 'failed', 404, 'the data you want to update does not exist', []);
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   insertAddress,
   readAddress,
   deleteAddress,
+  setPrimaryAddress,
 };

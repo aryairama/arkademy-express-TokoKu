@@ -82,6 +82,12 @@ const deleteAddress = (id) => new Promise((resolve, reject) => {
   });
 });
 
+const updateAddress = (data, id) => new Promise((resolve, reject) => {
+  connection.query('UPDATE addresses set ? where address_id = ?', [data, id], (error, result) => {
+    helpers.promiseResolveReject(resolve, reject, error, result);
+  });
+});
+
 module.exports = {
   insertAddress,
   batchUpdateSecondaryAddresses,
@@ -91,4 +97,5 @@ module.exports = {
   getPrimaryAddress,
   checkRealtion,
   deleteAddress,
+  updateAddress,
 };

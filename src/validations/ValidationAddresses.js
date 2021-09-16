@@ -122,6 +122,9 @@ const validate = (method) => {
   if (method === 'delete') {
     return [rulesReadUpdateDelete(), validateResult];
   }
+  if (method === 'setPrimary') {
+    return [rulesReadUpdateDelete(), validateResult];
+  }
 };
 
 module.exports = validate;
