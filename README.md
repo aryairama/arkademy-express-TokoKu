@@ -1,170 +1,158 @@
-# express-TokoKu
-express-TokoKu adalah aplikasi back end yang dibuat dengan framework express js dengan tujuan menghandle proses berjalannya aplikasi ecommerce toko-ku
-
-## Products
-Endpoint CRUD untuk Products
-
-### GET -> Read Products
->http://localhost:3000/products?search=T-shirt&order=desc&fieldOrder=quantity&limit=10&page=2
-
-Request Params
-Params | value | Rules
---- | --- | ---
-search | T-shirt | String
-order | desc | String desc/asc
-fieldOrder | quantity | String name/price/quantity/product_id
-limit | 10 | Number
-page | 2 | Number
-
-### POST -> POST Product
->http://localhost:3000/products
-
-Request Body
-Body | value | Rules
---- | --- | ---
-name | T-shirt Dark Face | String
-brand | zalora | String
-price | 85000 | Number
-colors | white | Enum blue/red/black/white
-size | 42 | Number
-quantity | 4 | Number
-product_status | new | Enum new/former
-description | i dont know about this product | String
-category_id | 6 | Number
-
-### PUT -> PUT Product
->http://localhost:3000/products/id
-
-Request Body
-Body | value | Rules
---- | --- | ---
-name | T-shirt Dark Face | String
-brand | zalora | String
-price | 85000 | Number
-colors | black | Enum
-size | 42 | Number
-quantity | 4 | Number
-product_status | new | Enum new/former
-description | i dont know about this product | String
-category_id | 6 | Number
-
-### DELETE -> DELETE Product
->http://localhost:3000/products/id
-
-## Categories
-Endpoint CRUD untuk Categories
-
-### GET -> Read Category
->http://localhost:3000/categories/?fieldOrder=category_id&limit=5&page=1
-
-Request Params
-Params | value | Rules
---- | --- | ---
-search | sekolah | String
-order | desc | String desc/asc
-fieldOrder | quantity | String name/category_id
-limit | 10 | Number
-page | 2 | Number
-
-### POST -> POST Category
->http://localhost:3000/categories
-
-Request Body
-Body | value | Rules
---- | --- | ---
-name | T-shirt | String
-
-### PUT -> PUT Category
->http://localhost:3000/categories/id
-
-Request Body
-Body | value | Rules
---- | --- | ---
-name | T-shirt | String
-
-### DELETE -> DELETE Category
->http://localhost:3000/categories/id
-
-## Users
-Endpoint CRUD untuk Users
-
-### POST -> POST User/Register User
->http://localhost:3000/products
-
-Request form-data
-form-data | value | Rules
---- | --- | ---
-name | marshal gelong | String
-email | marshalgelong@gmail.com | Email
-password | josgandos | String
-phone_number | 1234567891 | Number
-gender | male | Enum male/female
-date_of_birth | 2021-07-15 | Date
-avatar | Img | Img format png/jpg
-
-### POST -> POST Update User
->http://localhost:3000/users/9
-
-Request form-data
-form-data | value | Rules
---- | --- | ---
-name | marshal gelong | String
-email | marshalgelong@gmail.com | Email
-new_password | josgandos | String
-old_password | 234jos | String
-phone_number | 1234567891 | Number
-gender | male | Enum male/female
-date_of_birth | 2021-07-15 | Date
-avatar | Img | Img format png/jpg
-
-### GET -> Read Users
->http://localhost:3000/users/?search=987&order=asc&fieldOrder=user_id&limit=10&page=2
-
-Request Params
-Params | value | Rules
---- | --- | ---
-search | arya | String
-order | desc | String desc/asc
-fieldOrder | quantity | String name/date_of_birth/user_id
-limit | 10 | Number
-page | 2 | Number
-
-### DELETE -> DELETE User
->http://localhost:3000/users/id
-
-## Orders
-Endpoint CRUD untuk Orders
-
-### GET -> VIEW Detail Order
->http://localhost:3000/orders/detail/id
-
-### POST -> CREATE Order
->http://localhost:3000/orders
-
-Request Body
-Body | value | Rules
---- | --- | ---
-user_id | 1 | Number
-product_id | [1,2] | Array Number
-quantity | [2,2] | Array Number
+<br />
+<p align="center">
+<div align="center">
+  <img height="150" src="https://drive.google.com/uc?export=view&id=1_qgXTPQC_IuvHMWXam6ezA0qWEYEdx0C"/>
+</div>
+  <h3 align="center">TokoKu : Backend E-Commerce</h3>
+  <p align="center">
+    <a href="https://github.com/aryairama/arkademy-express-TokoKu"><strong>Explore the docs »</strong></a>
+    <br />
+    <a href="https://bit.ly/_tokoku">View Demo</a>
+    ·
+    <a href="https://github.com/aryairama/arkademy-express-TokoKu/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/aryairama/arkademy-express-TokoKu/issues">Request Feature</a>
+  </p>
+</p>
 
 
-### PATCH -> UPDATE Order Status
->http://localhost:3000/orders/id
 
-Request Body
-Body | value | Rules
---- | --- | ---
-status | processed | Enum submit/cancel/processed/sent/completed/paid
+<!-- TABLE OF CONTENTS -->
+## Table of Contents
 
-### GET -> READ Order
->http://localhost:3000/orders?search=8cb4907c&order=asc&fieldOrder=total_price&page=2&limit=10
+- [Table of Contents](#table-of-contents)
+- [About The Project](#about-the-project)
+  - [Built With](#built-with)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Setup .env example](#setup-env-example)
+- [Rest Api](#rest-api)
+- [Contributing](#contributing)
+- [Related Project](#related-project)
+- [Contact](#contact)
 
-Request Params
-Params | value | Rules
---- | --- | ---
-search | 8cb4907c | String
-order | desc | String desc/asc
-fieldOrder | quantity | String order_id/total_price
-limit | 10 | Number
-page | 2 | Number
+
+
+<!-- ABOUT THE PROJECT -->
+## About The Project
+
+This api is for my Tokoku e-commerce application, one of which is for handling product sales, product purchases, user registration, and others.
+
+### Built With
+
+- [Node.js](https://nodejs.org/en/)
+- [Express.js](https://expressjs.com/)
+- [JSON Web Tokens](https://jwt.io/)
+- [Nodemailer]('https://nodemailer.com/about/')
+- and other
+
+<!-- GETTING STARTED -->
+## Getting Started
+
+### Prerequisites
+
+This is an example of how to list things you need to use the software and how to install them.
+
+* [nodejs](https://nodejs.org/en/download/)
+
+### Requirements
+* [Node.js](https://nodejs.org/en/)
+* [Postman](https://www.getpostman.com/) for testing
+* [Database](database-example.sql)
+
+### Installation
+
+- Clone This Back End Repo
+```
+git clone https://github.com/aryairama/arkademy-express-TokoKu.git
+```
+- Go To Folder Repo
+```
+cd arkademy-express-TokoKu
+```
+- Install Module
+```
+npm install
+```
+- Development mode
+```
+npm run serve
+```
+- Deploy mode
+```
+npm start
+```
+
+### Setup .env example
+
+Create .env file in your root project folder.
+
+```env
+
+# Database
+DB_HOST = [DB_HOST]
+DB_USER = = [DB_USER]
+DB_NAME = [DB_NAME]
+DB_PASSWORD = [DB_PASSWORD]
+DB_PORT = [DB_PORT]
+# Aplication
+PORT = [PORT_APLICATION]
+# Secret key for jwt token
+ACCESS_TOKEN_SECRET = [SECRET_KEY_JWT]
+REFRESH_TOKEN_SECRET = [SECRET_KEY_JWT]
+VERIF_EMAIL_TOKEN_SECRET = [SECRET_KEY_JWT]
+# Redis
+HOST_REDIS = [REDIS_HOST]
+PORT_REDIS = [REDIS_PORT]
+AUTH_REDIS = [REDIS_AUTH]
+PATH_REDIS = [REDIS_UNIX_SOCKET]
+# IP/SOCKET
+# Sendmailer SMTP
+NODEMAILER_HOST = [SMTP_HOST]
+NODEMAILER_PORT = [SMTP_PORT]
+NODEMAILER_SECURE = [OPTION_SECURE_SMTP]
+NODEMAILER_AUTH_USER = [USER_SMTP]
+NODEMAILER_AUTH_PASS = [PASSWORD_SMTP]
+# FrontEnd
+URL_FRONTEND = [URL_FRONT_END]
+
+```
+
+## Rest Api
+
+You can view my Postman collection [here](https://www.postman.com/crimson-meadow-842892/workspace/TokoKu~7ee35b02-962d-4e0b-8e43-cecbf6d38092/collection/10655215-fd4f1f4d-8b62-419a-807a-cfc45f282ac0)
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/10655215-fd4f1f4d-8b62-419a-807a-cfc45f282ac0?action=collection%2Ffork&collection-url=entityId%3D10655215-fd4f1f4d-8b62-419a-807a-cfc45f282ac0%26entityType%3Dcollection%26workspaceId%3D7ee35b02-962d-4e0b-8e43-cecbf6d38092)
+
+<!-- CONTRIBUTING -->
+## Contributing
+
+Contributions are what make the open source community such an amazing place to be learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+
+
+## Related Project
+:rocket: [`Backend TokoKU`](https://github.com/aryairama/arkademy-express-TokoKu)
+
+:rocket: [`Frontend TokoKU`](https://github.com/aryairama/arkademy-react-TokoKu)
+
+:rocket: [`Demo TokoKu`](https://bit.ly/_tokoku)
+
+<!-- CONTACT -->
+## Contact
+
+My Email : aryairama987@gmail.com
+
+Project Link: [https://github.com/aryairama/arkademy-express-TokoKu](https://github.com/aryairama/arkademy-express-TokoKu)
+
+
+
+
+

@@ -108,8 +108,11 @@ const updateOrderStatus = async (req, res, next) => {
           updateQuantityProducts.push(getDataProducts[index].quantity + value.quantity);
         });
         const updateDataProducts = await ordersModel.updateProducts(updateQuantityProducts, productId);
-        if (updateDataProducts.affectedRows) {
-          productId.forEach((value) => clearRedisCacheV2(`viewProductDetail/${value}`));
+        const updateDataProductsAffectedRows = updateQuantityProducts.length > 1 ? updateDataProducts[0].affectedRows : updateDataProducts.affectedRows;
+        if (updateDataProductsAffectedRows) {
+          productId.forEach((value) => clearRedisCache(`viewProductDetail/${value}`));
+          clearRedisCacheV2('readProductCategory/*');
+          clearRedisCacheV2('readProduct-*');
         }
       }
       const changeDataOrder = await ordersModel.updateOrder(data, req.params.id);
