@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const helpers = require('../helpers/helpers');
 const ordersModel = require('../models/orderProducts');
 const storesModel = require('../models/stores');
+const addressesModel = require('../models/addresses');
 const { clearRedisCache, clearRedisCacheV2 } = require('../middlewares/Redis');
 
 const insertOrder = async (req, res, next) => {
@@ -44,8 +45,13 @@ const insertOrder = async (req, res, next) => {
             updated_at: new Date(),
           });
         });
+        const addressId = await addressesModel.getPrimaryAddress(req.userLogin.user_id);
+        if (addressId.length < 1) {
+          return helpers.responseError(res, 'Primary Adddress', 409, 'There is no main address in your account', []);
+        }
         const Orders = {
           user_id: req.userLogin.user_id,
+          address_id: addressId[0].address_id,
           invoice_number: uuidv4(),
           total_price: req.body.total,
           payment: req.body.payment,
