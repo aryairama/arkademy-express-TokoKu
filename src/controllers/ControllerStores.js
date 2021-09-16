@@ -87,6 +87,7 @@ const viewDetailStore = async (req, res, next) => {
 const updateProfileStore = async (req, res, next) => {
   try {
     const store = await storeModel.checkExistStore(req.userLogin.user_id, 'user_id');
+    const recentUser = await usersModel.checkExistUser(req.userLogin.user_id, 'user_id');
     let dataUser = {
       phone_number: req.body.phone_number,
     };
@@ -96,8 +97,8 @@ const updateProfileStore = async (req, res, next) => {
     };
     if (req.files) {
       if (req.files.avatar) {
-        if (req.userLogin.avatar && req.userLogin.avatar.length > 10) {
-          fs.unlink(path.join(path.dirname(''), `/${req.userLogin.avatar}`));
+        if (recentUser[0].avatar && recentUser[0].avatar.length > 10) {
+          fs.unlink(path.join(path.dirname(''), `/${recentUser[0].avatar}`));
         }
         const fileName = uuidv4() + path.extname(req.files.avatar.name);
         const savePath = path.join(path.dirname(''), '/public/img/avatars', fileName);
