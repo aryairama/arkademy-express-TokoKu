@@ -110,9 +110,9 @@ const deleteAddress = async (req, res, next) => {
     const checkExistAddress = await addressesModel.checkExistAddress(req.params.id, 'address_id');
     const checkRelation = await addressesModel.checkRealtion(req.params.id);
     if (checkExistAddress.length > 0) {
-      if (checkExistAddress[0].primary_address === 1 || checkExistAddress[0].primary_address === '1') {
-        return helpers.response(res, 'failed', 409, 'Main address cannot be deleted', []);
-      }
+      // if (checkExistAddress[0].primary_address === 1 || checkExistAddress[0].primary_address === '1') {
+      //   return helpers.response(res, 'failed', 409, 'Main address cannot be deleted', []);
+      // }
       if (checkRelation.length === 0) {
         const removeDataAddress = await addressesModel.deleteAddress(req.params.id);
         if (removeDataAddress.affectedRows) {

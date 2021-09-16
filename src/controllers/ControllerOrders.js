@@ -131,6 +131,7 @@ const viewOrderDetail = async (req, res, next) => {
     const userOrder = await ordersModel.getUserOrder(req.params.id);
     const orderDetails = await ordersModel.getOrderDetails(req.params.id);
     if (userOrder.length > 0 && orderDetails.length > 0) {
+      const address = await addressesModel.checkExistAddress(userOrder[0].address_id, 'address_id');
       res.json({
         store_id: userOrder[0].store_id,
         user_id: userOrder[0].user_id,
@@ -143,6 +144,7 @@ const viewOrderDetail = async (req, res, next) => {
         created_at: userOrder[0].created_at,
         updated_at: userOrder[0].updated_at,
         products: [...orderDetails],
+        address: { ...address[0] },
       });
     } else {
       helpers.response(res, 'failed', 404, "The order id doesn't exist", []);
