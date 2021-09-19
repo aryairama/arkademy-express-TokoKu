@@ -69,6 +69,8 @@ const insertOrder = async (req, res, next) => {
         if (addDataOrder.affectedRows && addDataOrderDetail.affectedRows && updateDataProductsAffectedRows) {
           helpers.response(res, 'success', 200, 'successfully added order data', []);
           productId.forEach((value) => clearRedisCache(`viewProductDetail/${value}`));
+          clearRedisCacheV2('readProductCategory/*');
+          clearRedisCacheV2('readProduct-*');
         }
       } else if (error > 0) {
         helpers.response(res, 'failed', 422, 'the number of products purchased does not match', []);
