@@ -76,13 +76,11 @@ cd arkademy-express-TokoKu
 ```
 npm install
 ```
-- Development mode
+- Make a new database and import [TokoKu.sql](https://drive.google.com/drive/folders/1bscFTkLYpxol2RygsvWEDaul2yJHswYT?usp=sharing)
+- <a href="#setup-env-example">Setup .env</a>
+- Starting application
 ```
 npm run serve
-```
-- Deploy mode
-```
-npm start
 ```
 
 ### Setup .env example
